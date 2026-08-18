@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import NewsDetail from "./pages/NewsDetail";
+import LegalPage from "./pages/LegalPages";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -13,6 +14,10 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/news/:slug"} component={NewsDetail} />
+      <Route path={"/about"}>{() => <LegalPage page="about" />}</Route>
+      <Route path={"/privacy"}>{() => <LegalPage page="privacy" />}</Route>
+      <Route path={"/terms"}>{() => <LegalPage page="terms" />}</Route>
+      <Route path={"/content-policy"}>{() => <LegalPage page="content" />}</Route>
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
