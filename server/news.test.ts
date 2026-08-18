@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("./db", () => ({ getDb: async () => null }));
 
-import { DEFAULT_NEWS_SOURCES, fallbackArabicSummary, hasRedundantCategoryCoverage, listNews, parseRss, prioritizeNews } from "./news";
+import { DEFAULT_NEWS_SOURCES, cleanRssText, fallbackArabicSummary, hasRedundantCategoryCoverage, isPublishableNews, listNews, parseRss, prioritizeNews } from "./news";
 
 const source = {
   name: "مصدر تجريبي موثوق",
@@ -41,6 +41,17 @@ describe("RSS news ingestion", () => {
   it("creates a concise Arabic fallback summary", () => {
     expect(fallbackArabicSummary("عنوان", "  نص   الخبر   المختصر ")).toBe("نص الخبر المختصر");
     expect(fallbackArabicSummary("عنوان", null)).toBe("عنوان");
+  });
+
+  it("cleans nested HTML and encoded break tags from feed text", () => {
+    expect(cleanRssText("<![CDATA[خبر &lt;br/&gt; <strong>مهم</strong>]]>")).toBe("خبر مهم");
+  });
+
+  it("rejects weak or title-duplicate summaries", () => {
+    const content = "تفاصيل موسعة عن الحدث تتضمن خلفيته وتطوراته والجهات المعنية والنتائج المتوقعة وما أكدته المصادر حتى الآن.";
+    expect(isPublishableNews("عنوان خبري واضح ومحدد", "عنوان خبري واضح ومحدد", content)).toBe(false);
+    expect(isPublishableNews("عنوان خبري واضح ومحدد", "ملخص مهني يشرح خلفية الحدث وتفاصيله والجهات المعنية وآخر ما أكدته المصادر للقارئ", content)).toBe(true);
+    expect(isPublishableNews("عنوان قصير", "ملخص مهني يشرح خلفية الحدث وتفاصيله والجهات المعنية وآخر ما أكدته المصادر للقارئ", content)).toBe(false);
   });
 
   it("includes official Iraq and Middle East feeds", () => {

@@ -21,6 +21,7 @@ export default function CookieConsent() {
   const choose = (value: CookieConsentValue) => {
     writeCookieConsent(value, window.localStorage);
     setConsent(value);
+    window.dispatchEvent(new CustomEvent<CookieConsentValue>("nabdh-consent-changed", { detail: value }));
   };
 
   return (

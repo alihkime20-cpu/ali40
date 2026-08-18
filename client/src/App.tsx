@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import NewsDetail from "./pages/NewsDetail";
 import LegalPage from "./pages/LegalPages";
 import CookieConsent from "./components/CookieConsent";
+import ConsentAwareAnalytics from "./components/ConsentAwareAnalytics";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -43,6 +44,7 @@ function App() {
           <Toaster />
           <Router />
           <CookieConsent />
+          <ConsentAwareAnalytics />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

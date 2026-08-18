@@ -27,8 +27,17 @@ export const DEFAULT_NEWS_SOURCES: InsertNewsSource[] = [
   { name: "The Guardian Food", feedUrl: "https://www.theguardian.com/food/rss", language: "en", category: "lifestyle", isActive: true },
 ];
 
+export function cleanRssText(value: string) {
+  let cleaned = value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1");
+  for (let pass = 0; pass < 2; pass += 1) {
+    cleaned = cleaned.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+    cleaned = cleaned.replace(/<[^>]+>/g, " ");
+  }
+  return cleaned.replace(/\s+/g, " ").trim();
+}
+
 function decodeXml(value: string) {
-  return value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+  return cleanRssText(value);
 }
 
 function readTag(block: string, tag: string) {
@@ -67,7 +76,22 @@ export function parseRss(xml: string, source: InsertNewsSource) {
 }
 
 export function fallbackArabicSummary(title: string, content: string | null) {
-  return content ? content.replace(/\s+/g, " ").trim().slice(0, 240) : title;
+  return content ? cleanRssText(content).slice(0, 240) : title;
+}
+
+function normalizedText(value: string) {
+  return value.toLowerCase().replace(/[\u064B-\u065Fـ]/g, "").replace(/[\s.,!?،؛:"'()[\]{}\-_/\\]+/g, "");
+}
+
+export function isPublishableNews(title: string, summary: string | null, sourceContent: string | null) {
+  const cleanTitle = cleanRssText(title);
+  const cleanSummary = cleanRssText(summary || "");
+  const cleanContent = cleanRssText(sourceContent || "");
+  if (cleanTitle.length < 18 || cleanSummary.length < 60 || cleanContent.length < 100) return false;
+  const titleKey = normalizedText(cleanTitle);
+  const summaryKey = normalizedText(cleanSummary);
+  if (!summaryKey || summaryKey === titleKey || summaryKey.includes(titleKey) || titleKey.includes(summaryKey)) return false;
+  return true;
 }
 
 export async function summarizeArabic(title: string, content: string | null) {
@@ -116,7 +140,8 @@ export async function syncNewsFeeds() {
       }
       const parsed = parseRss(await response.text(), source);
       fetched += parsed.length;
-      const items = await Promise.all(parsed.slice(0, 3).map(async item => ({ ...item, sourceId: source.id, summary: await summarizeArabic(item.title, item.content) })));
+      const summarized = await Promise.all(parsed.slice(0, 3).map(async item => ({ ...item, sourceId: source.id, summary: await summarizeArabic(item.title, item.content) })));
+      const items = summarized.filter(item => isPublishableNews(item.title, item.summary, item.content));
       await Promise.all(items.map(item => db.insert(news).values(item).onDuplicateKeyUpdate({ set: { title: item.title, content: item.content, imageUrl: item.imageUrl, summary: item.summary, publishedAt: item.publishedAt } })));
       inserted += items.length;
     } catch (error) {
