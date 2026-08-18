@@ -18,7 +18,6 @@ function Router() {
       <Route path={"/privacy"}>{() => <LegalPage page="privacy" />}</Route>
       <Route path={"/terms"}>{() => <LegalPage page="terms" />}</Route>
       <Route path={"/content-policy"}>{() => <LegalPage page="content" />}</Route>
-      <Route path={"/contact"}>{() => <LegalPage page="contact" />}</Route>
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
