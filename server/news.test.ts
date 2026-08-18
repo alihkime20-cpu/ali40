@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("./db", () => ({ getDb: async () => null }));
 
-import { DEFAULT_NEWS_SOURCES, fallbackArabicSummary, listNews, parseRss, prioritizeNews } from "./news";
+import { DEFAULT_NEWS_SOURCES, fallbackArabicSummary, hasRedundantCategoryCoverage, listNews, parseRss, prioritizeNews } from "./news";
 
 const source = {
   name: "مصدر تجريبي موثوق",
@@ -49,6 +49,13 @@ describe("RSS news ingestion", () => {
       "https://www.alsumaria.tv/Rss/News/ar/49/%D8%AF%D9%88%D9%84%D9%8A%D8%A7%D8%AA",
       "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml",
     ]));
+  });
+
+  it("keeps redundant coverage for every core section when one source fails", () => {
+    expect(hasRedundantCategoryCoverage(DEFAULT_NEWS_SOURCES)).toBe(true);
+    const remaining = DEFAULT_NEWS_SOURCES.filter(source => source.name !== "The Guardian Business");
+    expect(remaining.filter(source => source.category === "economy")).toHaveLength(1);
+    expect(hasRedundantCategoryCoverage(remaining)).toBe(false);
   });
 
   it("keeps the empty state safe and prioritizes regional sources", () => {

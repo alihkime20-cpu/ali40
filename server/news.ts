@@ -10,9 +10,21 @@ export const DEFAULT_NEWS_SOURCES: InsertNewsSource[] = [
   { name: "بي بي سي عربي", feedUrl: "https://feeds.bbci.co.uk/arabic/rss.xml", language: "ar", category: "world", isActive: true },
   { name: "BBC Middle East", feedUrl: "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml", language: "en", category: "world", isActive: true },
   { name: "BBC Sport", feedUrl: "https://feeds.bbci.co.uk/sport/rss.xml", language: "en", category: "sports", isActive: true },
+  { name: "ESPN Sports", feedUrl: "https://www.espn.com/espn/rss/news", language: "en", category: "sports", isActive: true },
+  { name: "BBC Business", feedUrl: "https://feeds.bbci.co.uk/news/business/rss.xml", language: "en", category: "economy", isActive: true },
+  { name: "BBC Health", feedUrl: "https://feeds.bbci.co.uk/news/health/rss.xml", language: "en", category: "health", isActive: true },
+  { name: "BBC Science", feedUrl: "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml", language: "en", category: "science", isActive: true },
+  { name: "BBC Technology", feedUrl: "https://feeds.bbci.co.uk/news/technology/rss.xml", language: "en", category: "technology", isActive: true },
+  { name: "BBC Culture", feedUrl: "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml", language: "en", category: "culture", isActive: true },
+  { name: "BBC Politics", feedUrl: "https://feeds.bbci.co.uk/news/politics/rss.xml", language: "en", category: "politics", isActive: true },
+  { name: "The Guardian Politics", feedUrl: "https://www.theguardian.com/politics/rss", language: "en", category: "politics", isActive: true },
+  { name: "The Guardian Business", feedUrl: "https://www.theguardian.com/business/rss", language: "en", category: "economy", isActive: true },
+  { name: "The Guardian Health", feedUrl: "https://www.theguardian.com/society/health/rss", language: "en", category: "health", isActive: true },
+  { name: "The Guardian Science", feedUrl: "https://www.theguardian.com/science/rss", language: "en", category: "science", isActive: true },
   { name: "The Guardian Technology", feedUrl: "https://www.theguardian.com/technology/rss", language: "en", category: "technology", isActive: true },
   { name: "The Guardian Culture", feedUrl: "https://www.theguardian.com/culture/rss", language: "en", category: "culture", isActive: true },
   { name: "The Guardian Lifestyle", feedUrl: "https://www.theguardian.com/lifeandstyle/rss", language: "en", category: "lifestyle", isActive: true },
+  { name: "The Guardian Food", feedUrl: "https://www.theguardian.com/food/rss", language: "en", category: "lifestyle", isActive: true },
 ];
 
 function decodeXml(value: string) {
@@ -112,6 +124,12 @@ export async function syncNewsFeeds() {
     }
   }
   return { fetched, inserted, sources: sources.length };
+}
+
+export const SOURCE_COVERAGE_CATEGORIES = ["politics", "economy", "sports", "technology", "health", "science", "culture", "lifestyle"] as const;
+
+export function hasRedundantCategoryCoverage(sources: Pick<InsertNewsSource, "category">[] = DEFAULT_NEWS_SOURCES) {
+  return SOURCE_COVERAGE_CATEGORIES.every(category => sources.filter(source => source.category === category).length >= 2);
 }
 
 export function prioritizeNews<T extends { sourceName: string; publishedAt: Date | string }>(rows: T[]) {
