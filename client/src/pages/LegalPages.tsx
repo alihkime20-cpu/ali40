@@ -1,75 +1,19 @@
 import { Link, useParams } from "wouter";
-import { ArrowRight, ExternalLink, Globe2, MessageCircle } from "lucide-react";
 
 export const WHATSAPP_BUSINESS_NUMBER = "9647740669189";
 export const OFFICIAL_EMAIL = "alihkime20@gmail.com";
-export const EDITORIAL_NAME = "مهندس علي";
 export const WHATSAPP_BUSINESS_URL = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}`;
 export const CONTACT_PAGE_TITLE = "اتصل بنا";
-export const CONTACT_PAGE_INTRO = "يسعدنا استقبال ملاحظاتك وتصحيحاتك واستفساراتك حول الأخبار والموقع عبر واتساب الأعمال.";
+export const CONTACT_PAGE_INTRO = "نرحب بالملاحظات التي تساعدنا على جعل الأدوات أوضح وأكثر فائدة. واتساب الأعمال والبريد الرسمي متاحان للتواصل.";
 export const CONTACT_WHATSAPP_SECTION_TITLE = "واتساب الأعمال";
-export const PRIVACY_EDITORIAL_CONTACT_NOTE = `للاستفسارات المتعلقة بالخصوصية أو البيانات أو الإعلانات، تواصل مع ${EDITORIAL_NAME} عبر البريد ${OFFICIAL_EMAIL} أو واتساب الأعمال من صفحة اتصل بنا.`;
-export const CONTENT_CORRECTION_NOTE = `إذا وجدت خطأً أو محتوى يخصك وترى أنه يُعرض بطريقة غير صحيحة، يرجى التواصل مع ${EDITORIAL_NAME} عبر صفحة اتصل بنا مع إرسال الرابط وشرح الطلب حتى تتم مراجعته.`;
-export const CONTENT_TRANSPARENCY_NOTE = `نميز بين الخبر المنقول والملخص التحريري والرأي. يتولى ${EDITORIAL_NAME} مراجعة منهجية العرض والتصحيحات، ولا نبيع أو نشتري التغطية ولا نضمن قبول طلبات النشر أو الحذف خارج إجراءات المراجعة. يمكن إرسال بلاغات حقوق النشر أو التصحيح عبر صفحة اتصل بنا.`;
-export const EDITORIAL_SECTION_HEADINGS = {
-  organization: "الجهة التحريرية",
-  methodology: "منهجية النشر",
-  aiReview: "الذكاء الاصطناعي والمراجعة",
-  corrections: "التصحيحات والملاحظات",
-  transparency: "الشفافية التحريرية",
-} as const;
 
 const pages = {
-  about: {
-    title: "من نحن",
-    intro: "نبض العالم منصة إخبارية عربية مستقلة تجمع أبرز الأخبار من مصادر معلنة وموثوقة، وتقدمها للقارئ في صياغة عربية واضحة مع الإشارة إلى المصدر الأصلي.",
-    sections: [
-      { h: "مهمتنا", p: "نساعدك على متابعة الأحداث العالمية بفهم أفضل، عبر تنظيم الأخبار حسب الأقسام وإضافة ملخصات عربية موجزة لا تستبدل النص الأصلي ولا تدّعي ملكيته." },
-      { h: EDITORIAL_SECTION_HEADINGS.organization, p: `نبض العالم مشروع إخباري رقمي مستقل يديره تحريرياً ${EDITORIAL_NAME} من العراق، ويهتم بأخبار العراق والشرق الأوسط إلى جانب الأخبار العالمية. نعمل على عرض المعلومات بوضوح، ونوضح للقارئ مصدر كل خبر بدلاً من تقديمه كمادة أصلية من دون إحالة.` },
-      { h: EDITORIAL_SECTION_HEADINGS.methodology, p: "نراجع بيانات المصدر ونحتفظ برابط الخبر الأصلي وتاريخ نشره، ثم نصنف الأخبار حسب الموضوع والمنطقة ونزيل التكرار قدر الإمكان. قد تختلف سرعة التحديث أو دقة التفاصيل بين المصادر، لذلك ننصح بالرجوع إلى المصدر الأصلي عند الحاجة." },
-      { h: EDITORIAL_SECTION_HEADINGS.aiReview, p: "قد نستخدم أدوات آلية للمساعدة في ترجمة العناوين أو إعداد ملخص أولي وتنظيم الخلاصات. لا تُعد هذه الأدوات بديلاً عن التحقق التحريري، وقد نعدّل أو نحذف أي مادة عند ظهور خطأ أو معلومات جديدة." },
-      { h: EDITORIAL_SECTION_HEADINGS.corrections, p: "نرحب بملاحظات القراء حول الأخطاء أو الروابط غير الصحيحة، ونراجعها عند إرسال تفاصيل واضحة ورابط الخبر عبر صفحة اتصل بنا. عند اعتماد التصحيح نحدّث المحتوى أو نوضح التعديل بحسب الحالة." },
-      { h: "التواصل الرسمي", p: `للاستفسارات التحريرية وطلبات التصحيح وحقوق النشر، يمكن مراسلة ${EDITORIAL_NAME} عبر البريد ${OFFICIAL_EMAIL} أو من خلال صفحة اتصل بنا.` },
-    ],
-  },
-  privacy: {
-    title: "سياسة الخصوصية",
-    intro: "نحترم خصوصيتك ونوضح هنا بصورة مبسطة كيف يتعامل الموقع مع البيانات وملفات الارتباط.",
-    sections: [
-      { h: "البيانات التي نجمعها", p: "قد تُجمع بيانات تقنية أساسية مثل نوع المتصفح والصفحات التي تمت زيارتها ووقت الزيارة لأغراض الأمان وتحسين الأداء. لا نطلب بيانات شخصية لإنشاء حساب من أجل قراءة الأخبار." },
-      { h: "التحليلات وملفات الارتباط والإعلانات", p: "قد نستخدم خدمات تحليل أو إعلانات مثل Google AdSense بعد تفعيلها والحصول على الموافقة اللازمة. قد تستخدم هذه الخدمات ملفات ارتباط وتقنيات مشابهة لتقديم الإعلانات أو قياس الأداء وفق سياساتها وإعدادات المستخدم. سنحدّث هذه الصفحة عند تفعيل أي خدمة جديدة." },
-      { h: "اختياراتك وحقوقك", p: "يمكنك ضبط ملفات الارتباط من إعدادات المتصفح، ورفض بعض ملفات الارتباط غير الضرورية عندما تظهر أدوات الموافقة. يمكنك طلب تصحيح أو إزالة محتوى متعلق بك عبر وسيلة التواصل الموضحة في صفحة اتصل بنا." },
-      { h: "التواصل بشأن الخصوصية", p: PRIVACY_EDITORIAL_CONTACT_NOTE },
-    ],
-  },
-  terms: {
-    title: "شروط الاستخدام",
-    intro: "باستخدامك نبض العالم، توافق على استخدام الموقع بطريقة قانونية ومسؤولة.",
-    sections: [
-      { h: "طبيعة المحتوى", p: "الموقع يقدم معلومات إخبارية عامة مع روابط للمصادر الأصلية. لا يُعد المحتوى استشارة سياسية أو مالية أو طبية أو قانونية، ولا نضمن اكتمال كل خبر أو استمرار توفر أي رابط خارجي." },
-      { h: "الاستخدام المقبول", p: "يحظر استخدام الموقع لنشر برمجيات ضارة أو محاولة تعطيل الخدمة أو إعادة نشر المحتوى بما يخالف حقوق أصحابه أو القوانين المعمول بها." },
-      { h: "الروابط الخارجية", p: "قد تحتوي الصفحات على روابط لمواقع خارجية لا نتحكم بها. مسؤولية مراجعة شروط وسياسات تلك المواقع تقع على المستخدم." },
-    ],
-  },
-  content: {
-    title: "سياسة المحتوى وحقوق النشر",
-    intro: "نلتزم بنسب الأخبار إلى مصادرها واحترام حقوق الملكية الفكرية.",
-    sections: [
-      { h: "المصادر والاقتباس", p: "الأخبار الواردة من خلاصات RSS تُعرض مع اسم المصدر ورابط الخبر الأصلي. الملخص العربي الذي يظهر أسفل العنوان صياغة تحريرية موجزة للمساعدة على الفهم، وليس بديلاً عن المصدر." },
-      { h: "طلبات التصحيح أو الإزالة", p: CONTENT_CORRECTION_NOTE },
-      { h: "المحتوى المحظور", p: "لا نقصد نشر محتوى ينتهك حقوق النشر أو يحرض على الكراهية أو العنف أو يخالف سياسات الناشرين. تخضع التغطية للمراجعة والتحديث عند توفر معلومات موثوقة." },
-      { h: EDITORIAL_SECTION_HEADINGS.transparency, p: CONTENT_TRANSPARENCY_NOTE },
-    ],
-  },
-  contact: {
-    title: CONTACT_PAGE_TITLE,
-    intro: CONTACT_PAGE_INTRO,
-    sections: [
-      { h: CONTACT_WHATSAPP_SECTION_TITLE, p: "للتواصل المباشر، استخدم الزر أدناه. يرجى إرسال رابط الخبر أو وصف واضح للطلب حتى نتمكن من مراجعته بسرعة." },
-      { h: "ملاحظات مهمة", p: "لا ترسل معلومات حساسة أو كلمات مرور عبر واتساب أو البريد. إرسال الرسالة لا يضمن النشر أو التعديل، فجميع الطلبات تخضع للمراجعة التحريرية." },
-      { h: "البريد الرسمي", p: `للاستفسارات التحريرية أو طلبات التصحيح وحقوق النشر: ${OFFICIAL_EMAIL}` },
-    ],
-  },
+  about: { title: "من نحن", intro: "SABACUN منصة عربية للأدوات الرقمية المجانية ومركز معرفة عملي.", sections: [{ h: "ما الذي نقدمه؟", p: "نبني أدوات صغيرة واضحة تساعد على إنجاز مهام الصور والنصوص وملفات PDF وSEO والتقنية من دون تعقيد غير ضروري. الاسم والهوية مستلهمان بخفة من تاريخ العراق، أما المنتج فهو منصة تقنية حديثة." }, { h: "مبادئنا", p: "نركز على الفائدة قبل الإعلانات، والوضوح قبل المبالغة، والخصوصية قبل جمع البيانات. نكتب الشروحات العربية المرتبطة بالأدوات لأن القارئ يحتاج إلى فهم القرار، لا مجرد زر تنفيذ." }] },
+  privacy: { title: "سياسة الخصوصية", intro: "نشرح هنا ما يحدث عند استخدام SABACUN بطريقة مباشرة.", sections: [{ h: "المعالجة داخل المتصفح", p: "تتم معالجة الصور والنصوص في الأدوات المحلية داخل متصفحك قدر الإمكان. لا نحتاج إلى رفع الملف أو معرفة محتواه كي تعمل هذه العمليات. قد يحتفظ المتصفح ببيانات مؤقتة أثناء الجلسة، ويمكنك حذفها من إعدادات المتصفح." }, { h: "البيانات التقنية والتحليلات", p: "قد تُسجل بيانات تقنية أساسية لتشغيل الموقع وحمايته، مثل نوع المتصفح والوقت ومسار الصفحة. لا نطلب التسجيل لاستخدام الأدوات الأساسية، ولا نبيع بيانات المستخدمين. لا تُحمّل التحليلات غير الضرورية قبل اختيار المستخدم من إشعار الموافقة." }, { h: "الروابط الخارجية", p: "قد تتضمن المقالات روابط إلى أدوات أو مصادر خارجية. راجع سياسة الموقع الخارجي قبل إدخال بيانات حساسة فيه؛ مسؤولية SABACUN تقتصر على الصفحات التي نديرها." }] },
+  terms: { title: "شروط الاستخدام", intro: "باستخدام SABACUN توافق على استخدام الأدوات بطريقة قانونية ومسؤولة.", sections: [{ h: "الاستخدام المقبول", p: "لا تستخدم الموقع لمعالجة ملفات ضارة أو انتهاك حقوق الآخرين أو التحايل على أنظمة الحماية. أنت مسؤول عن امتلاك الحق في استخدام أي ملف تدخله في أداة محلية." }, { h: "طبيعة الأدوات", p: "الأدوات مجانية وتقدم للمساعدة العامة. راجع النتيجة قبل استخدامها في قرار تجاري أو تقني مهم، واحتفظ بنسخة أصلية من الملفات المهمة." }] },
+  cookies: { title: "سياسة ملفات الارتباط", intro: "نستخدم الحد الأدنى اللازم لتذكر اختيارات الخصوصية وتحسين تشغيل الموقع.", sections: [{ h: "الاختيار", p: "يمكنك قبول أو رفض ملفات الارتباط غير الضرورية من إشعار الخصوصية. لا ينبغي تحميل التحليلات غير الضرورية قبل اختيارك. يمكنك حذف الملفات من إعدادات المتصفح في أي وقت." }, { h: "لماذا نستخدمها؟", p: "قد نحتاج إلى ملفات أساسية لحفظ تفضيل اللغة أو الموافقة. لا نستخدم الإشعار لإخفاء المحتوى أو إجبارك على التسجيل." }] },
+  content: { title: "سياسة المحتوى", intro: "نكتب محتوى SABACUN لمساعدة المستخدم، لا لملء الصفحات أو نسخ مواقع أخرى.", sections: [{ h: "الأصالة والقيمة", p: "لا يعتمد مركز المعرفة على إعادة نشر RSS أو نسخ المقالات. كل شرح مرتبط بأداة أو سؤال عملي، ونراجع النصوص قبل نشرها ونحدثها عندما تتغير طريقة الاستخدام." }, { h: "التصحيح والتواصل", p: "إذا وجدت خطأً أو شرحاً غير واضح، تواصل معنا مع رابط الصفحة ووصف المشكلة. نراجع البلاغ ونصحح المحتوى عندما يتأكد الخطأ." }] },
+  contact: { title: CONTACT_PAGE_TITLE, intro: CONTACT_PAGE_INTRO, sections: [{ h: "البريد الإلكتروني", p: `للاقتراحات أو الإبلاغ عن مشكلة: ${OFFICIAL_EMAIL}` }, { h: CONTACT_WHATSAPP_SECTION_TITLE, p: `يمكنك التواصل عبر واتساب الأعمال على الرقم: ${WHATSAPP_BUSINESS_NUMBER}` }, { h: "ماذا ترسل؟", p: "اذكر اسم الأداة، الجهاز أو المتصفح، والخطوات التي أدت إلى المشكلة. لا ترسل ملفات شخصية أو كلمات مرور." }] },
 } as const;
 
 export type LegalPageKey = keyof typeof pages;
@@ -78,31 +22,5 @@ export default function LegalPage({ page: requestedPage }: { page?: LegalPageKey
   const { page: routePage = "about" } = useParams<{ page: LegalPageKey }>();
   const page = requestedPage ?? routePage;
   const data = pages[page as LegalPageKey] ?? pages.about;
-
-  return (
-    <div dir="rtl" className="min-h-screen bg-[#f7f5f0] text-[#384448]">
-      <header className="border-b border-[#dedbd2] bg-white/70">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5">
-          <Link href="/" className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0f3d48] text-[#d7b579]"><Globe2 size={20} /></span><span className="news-serif text-xl font-bold text-[#0f3d48]">نبض العالم</span></Link>
-          <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-[#0f3d48]"><ArrowRight size={16} /> الرئيسية</Link>
-        </div>
-      </header>
-      <main className="mx-auto max-w-3xl px-5 py-14">
-        <span className="text-xs font-bold tracking-[.16em] text-[#b78b4b]">نبض العالم</span>
-        <h1 className="news-serif mt-3 text-4xl font-bold text-[#0f3d48] md:text-5xl">{data.title}</h1>
-        <p className="mt-7 rounded-2xl border-r-4 border-[#b78b4b] bg-white/70 px-5 py-4 text-lg leading-9">{data.intro}</p>
-        <div className="mt-10 space-y-8">{data.sections.map(section => <section key={section.h}><h2 className="news-serif text-2xl font-bold text-[#0f3d48]">{section.h}</h2><p className="mt-3 leading-9">{section.p}</p></section>)}</div>
-        {(page === "about" || page === "privacy" || page === "contact") && (
-          <div className="mt-10 rounded-3xl border border-[#dedbd2] bg-white p-6 shadow-sm">
-            <a href={`mailto:${OFFICIAL_EMAIL}`} className="mb-3 inline-flex w-full items-center justify-center gap-3 rounded-full border border-[#0f3d48] px-6 py-4 text-sm font-bold text-[#0f3d48] transition hover:bg-[#0f3d48] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#0f3d48] focus:ring-offset-2">مراسلة البريد الرسمي</a>
-            {page === "contact" && <>
-              <a href={WHATSAPP_BUSINESS_URL} target="_blank" rel="noreferrer" aria-label="التواصل عبر واتساب الأعمال" className="inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#138c5b] px-6 py-4 text-sm font-bold text-white transition hover:bg-[#0f744b] focus:outline-none focus:ring-2 focus:ring-[#138c5b] focus:ring-offset-2"><MessageCircle size={20} /> مراسلة واتساب الأعمال <ExternalLink size={16} /></a>
-              <p className="mt-4 text-center text-sm text-[#6d7578]" dir="ltr">+964 774 066 9189</p>
-            </>}
-          </div>
-        )}
-        <p className="mt-12 border-t border-[#dedbd2] pt-5 text-xs leading-7 text-[#7a8383]">هذه الصفحة معلومات عامة للموقع. يتم تحديثها عند إضافة خدمات تحليل أو إعلانات أو وسائل تواصل جديدة.</p>
-      </main>
-    </div>
-  );
+  return <div dir="rtl" className="min-h-screen bg-[#f7f8f4] text-[#384448]"><header className="border-b bg-white/80"><div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5"><Link href="/" className="font-display text-2xl font-bold tracking-wide text-[#123f45]">SABACUN</Link><Link href="/" className="text-sm font-bold text-[#1c615d]">الرئيسية</Link></div></header><main className="mx-auto max-w-3xl px-5 py-14"><span className="text-xs font-bold tracking-[.16em] text-[#c38d26]">SABACUN / سياسة واضحة</span><h1 className="mt-3 text-4xl font-bold text-[#123f45] md:text-5xl">{data.title}</h1><p className="mt-7 rounded-2xl border-r-4 border-[#d9a947] bg-white px-5 py-4 text-lg leading-9">{data.intro}</p><div className="mt-10 space-y-8">{data.sections.map((section) => <section key={section.h}><h2 className="text-2xl font-bold text-[#123f45]">{section.h}</h2><p className="mt-3 leading-9">{section.p}</p></section>)}</div>{page === "contact" && <div className="mt-10 rounded-3xl border bg-white p-6"><a href={`mailto:${OFFICIAL_EMAIL}`} className="mb-3 inline-flex w-full items-center justify-center rounded-full border border-[#123f45] px-6 py-4 text-sm font-bold text-[#123f45]">مراسلة البريد الرسمي</a><a href={WHATSAPP_BUSINESS_URL} target="_blank" rel="noreferrer" className="inline-flex w-full items-center justify-center rounded-full bg-[#138c5b] px-6 py-4 text-sm font-bold text-white">مراسلة واتساب الأعمال</a></div>}<p className="mt-12 border-t pt-5 text-xs leading-7 text-[#7a8383]">هذه الصفحة معلومات عامة للموقع، ويتم تحديثها عند إضافة أدوات أو خدمات جديدة.</p></main></div>;
 }

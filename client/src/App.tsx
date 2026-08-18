@@ -5,50 +5,15 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
-import NewsDetail from "./pages/NewsDetail";
+import Tools from "./pages/Tools";
+import ToolPage from "./pages/ToolPage";
+import Knowledge from "./pages/Knowledge";
 import LegalPage from "./pages/LegalPages";
 import CookieConsent from "./components/CookieConsent";
 import ConsentAwareAnalytics from "./components/ConsentAwareAnalytics";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
-  return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/news/:slug"} component={NewsDetail} />
-      <Route path={"/about"}>{() => <LegalPage page="about" />}</Route>
-      <Route path={"/privacy"}>{() => <LegalPage page="privacy" />}</Route>
-      <Route path={"/terms"}>{() => <LegalPage page="terms" />}</Route>
-      <Route path={"/content-policy"}>{() => <LegalPage page="content" />}</Route>
-      <Route path={"/contact"}>{() => <LegalPage page="contact" />}</Route>
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
-  );
+  return <Switch><Route path="/" component={Home} /><Route path="/tools" component={Tools} /><Route path="/tool/:slug" component={ToolPage} /><Route path="/knowledge/:slug" component={Knowledge} /><Route path="/knowledge" component={Knowledge} /><Route path="/about">{() => <LegalPage page="about" />}</Route><Route path="/privacy">{() => <LegalPage page="privacy" />}</Route><Route path="/terms">{() => <LegalPage page="terms" />}</Route><Route path="/cookies">{() => <LegalPage page="cookies" />}</Route><Route path="/content-policy">{() => <LegalPage page="content" />}</Route><Route path="/contact">{() => <LegalPage page="contact" />}</Route><Route path="/404" component={NotFound} /><Route component={NotFound} /></Switch>;
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
-function App() {
-  return (
-    <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-          <CookieConsent />
-          <ConsentAwareAnalytics />
-        </TooltipProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
-  );
-}
-
-export default App;
+export default function App() { return <ErrorBoundary><ThemeProvider defaultTheme="light"><TooltipProvider><Toaster /><Router /><CookieConsent /><ConsentAwareAnalytics /></TooltipProvider></ThemeProvider></ErrorBoundary>; }
