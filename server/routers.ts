@@ -16,7 +16,7 @@ export const appRouter = router({
     }),
   }),
   news: router({
-    list: publicProcedure.input(z.object({ category: z.string().optional(), search: z.string().optional(), limit: z.number().optional() }).optional()).query(({ input }) => listNews(input || {})),
+    list: publicProcedure.input(z.object({ category: z.string().optional(), search: z.string().optional(), language: z.enum(["ar", "en"]).optional(), limit: z.number().optional() }).optional()).query(({ input }) => listNews(input || {})),
     bySlug: publicProcedure.input(z.object({ slug: z.string() })).query(({ input }) => getNewsBySlug(input.slug)),
     related: publicProcedure.input(z.object({ id: z.number(), category: z.string() })).query(({ input }) => listRelatedNews(input)),
   }),

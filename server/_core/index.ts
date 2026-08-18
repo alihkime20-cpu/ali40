@@ -50,11 +50,19 @@ async function startServer() {
     if (!isCrawler) return next();
     const story = await getNewsBySlug(req.params.slug);
     if (!story) return next();
-    const title = escapeHtml(`${story.title} | نبض العالم`);
+    const requestedLanguage = String(req.headers["accept-language"] || "").toLowerCase();
+    const locale = requestedLanguage.startsWith("en") ? "en" : "ar";
+    const direction = locale === "ar" ? "rtl" : "ltr";
+    const brand = locale === "ar" ? "نبض العالم" : "Global Pulse";
+    const readLabel = locale === "ar" ? "قراءة الخبر" : "Read story";
+    const title = escapeHtml(`${story.title} | ${brand}`);
     const description = escapeHtml(story.summary || story.title);
-    const canonical = escapeHtml(`${req.protocol}://${req.get("host")}/news/${encodeURIComponent(req.params.slug)}`);
+    const canonicalRaw = `${req.protocol}://${req.get("host")}/news/${encodeURIComponent(req.params.slug)}`;
+    const canonical = escapeHtml(canonicalRaw);
     const image = story.imageUrl ? `<meta property="og:image" content="${escapeHtml(story.imageUrl)}" />` : "";
-    res.type("html").send(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8" /><title>${title}</title><meta name="description" content="${description}" /><meta property="og:title" content="${title}" /><meta property="og:description" content="${description}" /><meta property="og:type" content="article" /><meta property="og:url" content="${canonical}" />${image}<meta name="twitter:card" content="summary_large_image" /><link rel="canonical" href="${canonical}" /></head><body><main><h1>${title}</h1><p>${description}</p><a href="${canonical}">قراءة الخبر</a></main></body></html>`);
+    const structuredData = JSON.stringify({ "@context": "https://schema.org", "@type": "NewsArticle", headline: story.title, description: story.summary || story.title, datePublished: new Date(story.publishedAt).toISOString(), dateModified: new Date(story.fetchedAt).toISOString(), mainEntityOfPage: canonicalRaw, author: { "@type": "Organization", name: story.sourceName }, publisher: { "@type": "Organization", name: brand }, ...(story.imageUrl ? { image: [story.imageUrl] } : {}) }).replace(/</g, "\\u003c");
+    const alternateLinks = `<link rel="alternate" hreflang="ar" href="${canonical}?lang=ar" /><link rel="alternate" hreflang="en" href="${canonical}?lang=en" /><link rel="alternate" hreflang="x-default" href="${canonical}" />`;
+    res.type("html").send(`<!doctype html><html lang="${locale}" dir="${direction}"><head><meta charset="utf-8" /><title>${title}</title><meta name="description" content="${description}" /><meta property="og:locale" content="${locale === "ar" ? "ar_AR" : "en_US"}" /><meta property="og:title" content="${title}" /><meta property="og:description" content="${description}" /><meta property="og:type" content="article" /><meta property="og:url" content="${canonical}" />${image}<meta name="twitter:card" content="summary_large_image" /><link rel="canonical" href="${canonical}" />${alternateLinks}<script type="application/ld+json">${structuredData}</script></head><body><main><h1>${title}</h1><p>${description}</p><a href="${canonical}">${readLabel}</a></main></body></html>`);
   });
   registerSeoRoutes(app);
   // tRPC API

@@ -1,4 +1,4 @@
-import { and, desc, eq, like, ne, or } from "drizzle-orm";
+import { and, desc, eq, inArray, like, ne, or } from "drizzle-orm";
 import { invokeLLM } from "./_core/llm";
 import { getDb } from "./db";
 import { news, newsSources, type InsertNewsSource } from "../drizzle/schema";
@@ -137,10 +137,15 @@ export function prioritizeNews<T extends { sourceName: string; publishedAt: Date
   return rows.sort((a, b) => Number(regionalPattern.test(b.sourceName)) - Number(regionalPattern.test(a.sourceName)) || new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
-export async function listNews(input: { category?: string; search?: string; limit?: number }) {
+export async function listNews(input: { category?: string; search?: string; language?: "ar" | "en"; limit?: number }) {
   const db = await getDb();
   if (!db) return [];
   const filters = [];
+  if (input.language === "en") {
+    const englishSources = await db.select({ id: newsSources.id }).from(newsSources).where(eq(newsSources.language, "en"));
+    if (englishSources.length) filters.push(inArray(news.sourceId, englishSources.map(source => source.id)));
+    else return [];
+  }
   if (input.category && input.category !== "all") filters.push(eq(news.category, input.category as typeof news.category.enumValues[number]));
   if (input.search?.trim()) {
     const term = `%${input.search.trim()}%`;

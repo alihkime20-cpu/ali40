@@ -70,4 +70,8 @@ describe("RSS news ingestion", () => {
   it("returns an empty list when the news database is unavailable", async () => {
     await expect(listNews({})).resolves.toEqual([]);
   });
+
+  it("accepts the English locale filter safely", async () => {
+    await expect(listNews({ language: "en" })).resolves.toEqual([]);
+  });
 });
