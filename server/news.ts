@@ -4,8 +4,11 @@ import { getDb } from "./db";
 import { news, newsSources, type InsertNewsSource } from "../drizzle/schema";
 
 export const DEFAULT_NEWS_SOURCES: InsertNewsSource[] = [
+  { name: "السومرية — آخر أخبار العراق", feedUrl: "https://www.alsumaria.tv/Rss/iraq-latest-news/ar", language: "ar", category: "world", isActive: true },
+  { name: "السومرية — أبرز الأخبار", feedUrl: "https://www.alsumaria.tv/Rss/NewsHighlights/ar", language: "ar", category: "world", isActive: true },
+  { name: "السومرية — دوليات الشرق الأوسط", feedUrl: "https://www.alsumaria.tv/Rss/News/ar/49/%D8%AF%D9%88%D9%84%D9%8A%D8%A7%D8%AA", language: "ar", category: "politics", isActive: true },
   { name: "بي بي سي عربي", feedUrl: "https://feeds.bbci.co.uk/arabic/rss.xml", language: "ar", category: "world", isActive: true },
-  { name: "الجزيرة نت", feedUrl: "https://www.aljazeera.net/aljazeera/rss", language: "ar", category: "politics", isActive: true },
+  { name: "BBC Middle East", feedUrl: "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml", language: "en", category: "world", isActive: true },
   { name: "BBC Sport", feedUrl: "https://feeds.bbci.co.uk/sport/rss.xml", language: "en", category: "sports", isActive: true },
   { name: "The Guardian Technology", feedUrl: "https://www.theguardian.com/technology/rss", language: "en", category: "technology", isActive: true },
   { name: "The Guardian Culture", feedUrl: "https://www.theguardian.com/culture/rss", language: "en", category: "culture", isActive: true },
@@ -27,10 +30,11 @@ function slugify(title: string, externalId: string) {
 }
 
 export function parseRss(xml: string, source: InsertNewsSource) {
-  const items = Array.from(xml.matchAll(/<item(?:\s[^>]*)?>([\s\S]*?)<\/item>/gi), match => match[1]);
+  const items = Array.from(xml.matchAll(/<(?:item|entry)(?:\s[^>]*)?>([\s\S]*?)<\/(?:item|entry)>/gi), match => match[1]);
   return items.map((item, index) => {
     const title = readTag(item, "title");
-    const sourceUrl = readTag(item, "link") || readTag(item, "guid");
+    const atomLink = item.match(/<link[^>]+href=["']([^"']+)["']/i)?.[1] || "";
+    const sourceUrl = readTag(item, "link") || atomLink || readTag(item, "guid");
     const externalId = readTag(item, "guid") || sourceUrl || `${source.feedUrl}-${index}-${title}`;
     const published = readTag(item, "pubDate") || readTag(item, "published") || readTag(item, "updated");
     const description = readTag(item, "description") || readTag(item, "content:encoded");
@@ -87,8 +91,17 @@ export async function syncNewsFeeds() {
   let inserted = 0;
   for (const source of sources.filter(item => item.isActive)) {
     try {
-      const response = await fetch(source.feedUrl, { headers: { "user-agent": "NabdAlalam/1.0 RSS Reader" } });
-      if (!response.ok) continue;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const response = await fetch(source.feedUrl, {
+        headers: { "user-agent": "NabdAlalam/1.0 RSS Reader", accept: "application/rss+xml, application/atom+xml, text/xml" },
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!response.ok) {
+        console.warn(`[News] Feed returned ${response.status}: ${source.feedUrl}`);
+        continue;
+      }
       const parsed = parseRss(await response.text(), source);
       fetched += parsed.length;
       for (const item of parsed.slice(0, 20)) {
@@ -103,6 +116,11 @@ export async function syncNewsFeeds() {
   return { fetched, inserted, sources: sources.length };
 }
 
+export function prioritizeNews<T extends { sourceName: string; publishedAt: Date | string }>(rows: T[]) {
+  const regionalPattern = /السومرية|بي بي سي عربي|BBC Middle East/i;
+  return rows.sort((a, b) => Number(regionalPattern.test(b.sourceName)) - Number(regionalPattern.test(a.sourceName)) || new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+}
+
 export async function listNews(input: { category?: string; search?: string; limit?: number }) {
   const db = await getDb();
   if (!db) return [];
@@ -112,7 +130,9 @@ export async function listNews(input: { category?: string; search?: string; limi
     const term = `%${input.search.trim()}%`;
     filters.push(or(like(news.title, term), like(news.summary, term), like(news.sourceName, term))!);
   }
-  return db.select().from(news).where(filters.length ? and(...filters) : undefined).orderBy(desc(news.publishedAt)).limit(Math.min(input.limit || 30, 60));
+  const rows = await db.select().from(news).where(filters.length ? and(...filters) : undefined).orderBy(desc(news.publishedAt)).limit(Math.min(input.limit || 30, 60));
+  if (!input.category || input.category === "all") return prioritizeNews(rows);
+  return rows;
 }
 
 export async function getNewsBySlug(slug: string) {

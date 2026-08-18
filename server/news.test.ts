@@ -1,5 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { fallbackArabicSummary, parseRss } from "./news";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("./db", () => ({ getDb: async () => null }));
+
+import { DEFAULT_NEWS_SOURCES, fallbackArabicSummary, listNews, parseRss, prioritizeNews } from "./news";
 
 const source = {
   name: "مصدر تجريبي موثوق",
@@ -38,5 +41,26 @@ describe("RSS news ingestion", () => {
   it("creates a concise Arabic fallback summary", () => {
     expect(fallbackArabicSummary("عنوان", "  نص   الخبر   المختصر ")).toBe("نص الخبر المختصر");
     expect(fallbackArabicSummary("عنوان", null)).toBe("عنوان");
+  });
+
+  it("includes official Iraq and Middle East feeds", () => {
+    expect(DEFAULT_NEWS_SOURCES.map(source => source.feedUrl)).toEqual(expect.arrayContaining([
+      "https://www.alsumaria.tv/Rss/iraq-latest-news/ar",
+      "https://www.alsumaria.tv/Rss/News/ar/49/%D8%AF%D9%88%D9%84%D9%8A%D8%A7%D8%AA",
+      "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml",
+    ]));
+  });
+
+  it("keeps the empty state safe and prioritizes regional sources", () => {
+    expect(prioritizeNews([])).toEqual([]);
+    const rows = [
+      { sourceName: "BBC Sport", publishedAt: new Date("2026-08-18T12:00:00Z") },
+      { sourceName: "السومرية — آخر أخبار العراق", publishedAt: new Date("2026-08-18T10:00:00Z") },
+    ];
+    expect(prioritizeNews(rows)[0]?.sourceName).toContain("السومرية");
+  });
+
+  it("returns an empty list when the news database is unavailable", async () => {
+    await expect(listNews({})).resolves.toEqual([]);
   });
 });
