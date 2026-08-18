@@ -92,7 +92,7 @@ export async function syncNewsFeeds() {
   for (const source of sources.filter(item => item.isActive)) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
+      const timeout = setTimeout(() => controller.abort(), 8000);
       const response = await fetch(source.feedUrl, {
         headers: { "user-agent": "NabdAlalam/1.0 RSS Reader", accept: "application/rss+xml, application/atom+xml, text/xml" },
         signal: controller.signal,
@@ -104,11 +104,9 @@ export async function syncNewsFeeds() {
       }
       const parsed = parseRss(await response.text(), source);
       fetched += parsed.length;
-      for (const item of parsed.slice(0, 20)) {
-        const summary = await summarizeArabic(item.title, item.content);
-        await db.insert(news).values({ ...item, sourceId: source.id, summary }).onDuplicateKeyUpdate({ set: { title: item.title, content: item.content, imageUrl: item.imageUrl, summary, publishedAt: item.publishedAt } });
-        inserted += 1;
-      }
+      const items = await Promise.all(parsed.slice(0, 3).map(async item => ({ ...item, sourceId: source.id, summary: await summarizeArabic(item.title, item.content) })));
+      await Promise.all(items.map(item => db.insert(news).values(item).onDuplicateKeyUpdate({ set: { title: item.title, content: item.content, imageUrl: item.imageUrl, summary: item.summary, publishedAt: item.publishedAt } })));
+      inserted += items.length;
     } catch (error) {
       console.warn(`[News] Feed failed: ${source.feedUrl}`, error);
     }
