@@ -5,6 +5,11 @@ import {
   WHATSAPP_BUSINESS_NUMBER,
   EDITORIAL_SECTION_HEADINGS,
 } from "../client/src/pages/LegalPages";
+import {
+  AI_SUMMARY_LABEL,
+  EDITORIAL_VALUE_HEADINGS,
+  ORIGINAL_CONTENT_NOTE,
+} from "../client/src/pages/NewsDetail";
 
 describe("AdSense readiness content", () => {
   it("persists and reads an explicit cookie preference", () => {
@@ -32,6 +37,16 @@ describe("AdSense readiness content", () => {
       "الذكاء الاصطناعي والمراجعة",
       "التصحيحات والملاحظات",
       "الشفافية التحريرية",
+    ]);
+  });
+
+  it("labels assisted summaries and original-source boundaries", () => {
+    expect(AI_SUMMARY_LABEL).toContain("الذكاء الاصطناعي");
+    expect(ORIGINAL_CONTENT_NOTE).toContain("المصدر الأصلي");
+    expect(Object.values(EDITORIAL_VALUE_HEADINGS)).toEqual([
+      "السياق التحريري",
+      "ما الذي نتحقق منه؟",
+      "ملاحظة للقراءة",
     ]);
   });
 });

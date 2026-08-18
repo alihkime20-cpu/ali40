@@ -2,6 +2,7 @@ import { Link, useParams } from "wouter";
 import { ArrowRight, ExternalLink, Globe2, MessageCircle } from "lucide-react";
 
 export const WHATSAPP_BUSINESS_NUMBER = "9647740669189";
+export const OFFICIAL_EMAIL = "alihkime20@gmail.com";
 export const WHATSAPP_BUSINESS_URL = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}`;
 export const CONTACT_PAGE_TITLE = "اتصل بنا";
 export const CONTACT_PAGE_INTRO = "يسعدنا استقبال ملاحظاتك وتصحيحاتك واستفساراتك حول الأخبار والموقع عبر واتساب الأعمال.";
@@ -24,6 +25,7 @@ const pages = {
       { h: EDITORIAL_SECTION_HEADINGS.methodology, p: "نراجع بيانات المصدر ونحتفظ برابط الخبر الأصلي وتاريخ نشره، ثم نصنف الأخبار حسب الموضوع والمنطقة ونزيل التكرار قدر الإمكان. قد تختلف سرعة التحديث أو دقة التفاصيل بين المصادر، لذلك ننصح بالرجوع إلى المصدر الأصلي عند الحاجة." },
       { h: EDITORIAL_SECTION_HEADINGS.aiReview, p: "قد نستخدم أدوات آلية للمساعدة في ترجمة العناوين أو إعداد ملخص أولي وتنظيم الخلاصات. لا تُعد هذه الأدوات بديلاً عن التحقق التحريري، وقد نعدّل أو نحذف أي مادة عند ظهور خطأ أو معلومات جديدة." },
       { h: EDITORIAL_SECTION_HEADINGS.corrections, p: "نرحب بملاحظات القراء حول الأخطاء أو الروابط غير الصحيحة، ونراجعها عند إرسال تفاصيل واضحة ورابط الخبر عبر صفحة اتصل بنا. عند اعتماد التصحيح نحدّث المحتوى أو نوضح التعديل بحسب الحالة." },
+      { h: "التواصل الرسمي", p: `للاستفسارات التحريرية وطلبات التصحيح وحقوق النشر، يمكن مراسلتنا عبر البريد ${OFFICIAL_EMAIL} أو من خلال صفحة اتصل بنا.` },
     ],
   },
   privacy: {
@@ -33,7 +35,7 @@ const pages = {
       { h: "البيانات التي نجمعها", p: "قد تُجمع بيانات تقنية أساسية مثل نوع المتصفح والصفحات التي تمت زيارتها ووقت الزيارة لأغراض الأمان وتحسين الأداء. لا نطلب بيانات شخصية لإنشاء حساب من أجل قراءة الأخبار." },
       { h: "التحليلات وملفات الارتباط والإعلانات", p: "قد نستخدم خدمات تحليل أو إعلانات مثل Google AdSense بعد تفعيلها والحصول على الموافقة اللازمة. قد تستخدم هذه الخدمات ملفات ارتباط وتقنيات مشابهة لتقديم الإعلانات أو قياس الأداء وفق سياساتها وإعدادات المستخدم. سنحدّث هذه الصفحة عند تفعيل أي خدمة جديدة." },
       { h: "اختياراتك وحقوقك", p: "يمكنك ضبط ملفات الارتباط من إعدادات المتصفح، ورفض بعض ملفات الارتباط غير الضرورية عندما تظهر أدوات الموافقة. يمكنك طلب تصحيح أو إزالة محتوى متعلق بك عبر وسيلة التواصل الموضحة في صفحة اتصل بنا." },
-      { h: "التواصل بشأن الخصوصية", p: "للاستفسارات المتعلقة بالخصوصية أو البيانات أو الإعلانات، تواصل معنا عبر واتساب الأعمال من صفحة اتصل بنا." },
+      { h: "التواصل بشأن الخصوصية", p: `للاستفسارات المتعلقة بالخصوصية أو البيانات أو الإعلانات، تواصل معنا عبر البريد ${OFFICIAL_EMAIL} أو واتساب الأعمال من صفحة اتصل بنا.` },
     ],
   },
   terms: {
@@ -51,9 +53,8 @@ const pages = {
     sections: [
       { h: "المصادر والاقتباس", p: "الأخبار الواردة من خلاصات RSS تُعرض مع اسم المصدر ورابط الخبر الأصلي. الملخص العربي الذي يظهر أسفل العنوان صياغة تحريرية موجزة للمساعدة على الفهم، وليس بديلاً عن المصدر." },
       { h: "طلبات التصحيح أو الإزالة", p: "إذا وجدت خطأً أو محتوى يخصك وترى أنه يُعرض بطريقة غير صحيحة، يرجى التواصل مع مالك الموقع عبر صفحة اتصل بنا مع إرسال الرابط وشرح الطلب حتى تتم مراجعته." },
-              { h: "المحتوى المحظور", p: "لا نقصد نشر محتوى ينتهك حقوق النشر أو يحرض على الكراهية أو العنف أو يخالف سياسات الناشرين. تخضع التغطية للمراجعة والتحديث عند توفر معلومات موثوقة." },
-        { h: EDITORIAL_SECTION_HEADINGS.transparency, p: "نميز بين الخبر المنقول والملخص التحريري والرأي. لا نبيع أو نشتري التغطية، ولا نضمن قبول طلبات النشر أو الحذف خارج إجراءات المراجعة. يمكن إرسال بلاغات حقوق النشر أو التصحيح عبر صفحة اتصل بنا." },
-
+      { h: "المحتوى المحظور", p: "لا نقصد نشر محتوى ينتهك حقوق النشر أو يحرض على الكراهية أو العنف أو يخالف سياسات الناشرين. تخضع التغطية للمراجعة والتحديث عند توفر معلومات موثوقة." },
+      { h: EDITORIAL_SECTION_HEADINGS.transparency, p: "نميز بين الخبر المنقول والملخص التحريري والرأي. لا نبيع أو نشتري التغطية، ولا نضمن قبول طلبات النشر أو الحذف خارج إجراءات المراجعة. يمكن إرسال بلاغات حقوق النشر أو التصحيح عبر صفحة اتصل بنا." },
     ],
   },
   contact: {
@@ -61,7 +62,8 @@ const pages = {
     intro: CONTACT_PAGE_INTRO,
     sections: [
       { h: CONTACT_WHATSAPP_SECTION_TITLE, p: "للتواصل المباشر، استخدم الزر أدناه. يرجى إرسال رابط الخبر أو وصف واضح للطلب حتى نتمكن من مراجعته بسرعة." },
-      { h: "ملاحظات مهمة", p: "لا ترسل معلومات حساسة أو كلمات مرور عبر واتساب. إرسال الرسالة لا يضمن النشر أو التعديل، فجميع الطلبات تخضع للمراجعة التحريرية." },
+      { h: "ملاحظات مهمة", p: "لا ترسل معلومات حساسة أو كلمات مرور عبر واتساب أو البريد. إرسال الرسالة لا يضمن النشر أو التعديل، فجميع الطلبات تخضع للمراجعة التحريرية." },
+      { h: "البريد الرسمي", p: `للاستفسارات التحريرية أو طلبات التصحيح وحقوق النشر: ${OFFICIAL_EMAIL}` },
     ],
   },
 } as const;
@@ -86,7 +88,15 @@ export default function LegalPage({ page: requestedPage }: { page?: LegalPageKey
         <h1 className="news-serif mt-3 text-4xl font-bold text-[#0f3d48] md:text-5xl">{data.title}</h1>
         <p className="mt-7 rounded-2xl border-r-4 border-[#b78b4b] bg-white/70 px-5 py-4 text-lg leading-9">{data.intro}</p>
         <div className="mt-10 space-y-8">{data.sections.map(section => <section key={section.h}><h2 className="news-serif text-2xl font-bold text-[#0f3d48]">{section.h}</h2><p className="mt-3 leading-9">{section.p}</p></section>)}</div>
-        {page === "contact" && <div className="mt-10 rounded-3xl border border-[#dedbd2] bg-white p-6 shadow-sm"><a href={WHATSAPP_BUSINESS_URL} target="_blank" rel="noreferrer" aria-label="التواصل عبر واتساب الأعمال" className="inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#138c5b] px-6 py-4 text-sm font-bold text-white transition hover:bg-[#0f744b] focus:outline-none focus:ring-2 focus:ring-[#138c5b] focus:ring-offset-2"><MessageCircle size={20} /> مراسلة واتساب الأعمال <ExternalLink size={16} /></a><p className="mt-4 text-center text-sm text-[#6d7578]" dir="ltr">+964 774 066 9189</p></div>}
+        {(page === "about" || page === "privacy" || page === "contact") && (
+          <div className="mt-10 rounded-3xl border border-[#dedbd2] bg-white p-6 shadow-sm">
+            <a href={`mailto:${OFFICIAL_EMAIL}`} className="mb-3 inline-flex w-full items-center justify-center gap-3 rounded-full border border-[#0f3d48] px-6 py-4 text-sm font-bold text-[#0f3d48] transition hover:bg-[#0f3d48] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#0f3d48] focus:ring-offset-2">مراسلة البريد الرسمي</a>
+            {page === "contact" && <>
+              <a href={WHATSAPP_BUSINESS_URL} target="_blank" rel="noreferrer" aria-label="التواصل عبر واتساب الأعمال" className="inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#138c5b] px-6 py-4 text-sm font-bold text-white transition hover:bg-[#0f744b] focus:outline-none focus:ring-2 focus:ring-[#138c5b] focus:ring-offset-2"><MessageCircle size={20} /> مراسلة واتساب الأعمال <ExternalLink size={16} /></a>
+              <p className="mt-4 text-center text-sm text-[#6d7578]" dir="ltr">+964 774 066 9189</p>
+            </>}
+          </div>
+        )}
         <p className="mt-12 border-t border-[#dedbd2] pt-5 text-xs leading-7 text-[#7a8383]">هذه الصفحة معلومات عامة للموقع. يتم تحديثها عند إضافة خدمات تحليل أو إعلانات أو وسائل تواصل جديدة.</p>
       </main>
     </div>

@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Search, ArrowLeft, Clock3, Radio, Globe2, Menu, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { OFFICIAL_EMAIL } from "./LegalPages";
 
 const categories = [
   ["all", "كل الأخبار"], ["world", "العالم"], ["politics", "سياسة"], ["economy", "اقتصاد"], ["sports", "رياضة"], ["technology", "تكنولوجيا"], ["health", "صحة"], ["culture", "ثقافة"], ["science", "علوم"], ["lifestyle", "منوعات"],
@@ -52,7 +53,7 @@ export default function Home() {
         </section>
         <section id="about" className="border-t border-[#dedbd2] bg-white/40"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 px-5 py-12 md:flex-row md:items-center"><div><h2 className="news-serif text-2xl font-bold text-[#0f3d48]">نبض العالم</h2><p className="mt-2 max-w-xl text-sm leading-7 text-[#6d7578]">منصة تجمع الأخبار من خلاصات RSS المعلنة للمصادر، وتعرضها بترتيب واضح مع ملخص عربي موجز يساعدك على فهم السياق بسرعة.</p></div><div className="flex items-center gap-3 text-xs text-[#6d7578]"><span className="h-2 w-2 rounded-full bg-emerald-500" /> النظام مصمم للتحديث التلقائي</div></div></section>
       </main>
-      <footer className="bg-[#0f3d48] px-5 py-7 text-center text-xs text-white/60"><div className="mb-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-white/75"><Link href="/about" className="hover:text-[#d7b579]">من نحن</Link><Link href="/privacy" className="hover:text-[#d7b579]">الخصوصية والارتباطات</Link><Link href="/terms" className="hover:text-[#d7b579]">شروط الاستخدام</Link><Link href="/content-policy" className="hover:text-[#d7b579]">سياسة المحتوى وحقوق النشر</Link><Link href="/contact" className="hover:text-[#d7b579]">اتصل بنا</Link></div>© {new Date().getFullYear()} نبض العالم · الأخبار تُنسب إلى مصادرها الأصلية</footer>
+      <footer className="bg-[#0f3d48] px-5 py-7 text-center text-xs text-white/60"><div className="mb-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-white/75"><Link href="/about" className="hover:text-[#d7b579]">من نحن</Link><Link href="/privacy" className="hover:text-[#d7b579]">الخصوصية والارتباطات</Link><Link href="/terms" className="hover:text-[#d7b579]">شروط الاستخدام</Link><Link href="/content-policy" className="hover:text-[#d7b579]">سياسة المحتوى وحقوق النشر</Link><Link href="/contact" className="hover:text-[#d7b579]">اتصل بنا</Link><a href={`mailto:${OFFICIAL_EMAIL}`} className="hover:text-[#d7b579]">البريد الرسمي</a></div>© {new Date().getFullYear()} نبض العالم · الأخبار تُنسب إلى مصادرها الأصلية</footer>
     </div>
   );
 }
