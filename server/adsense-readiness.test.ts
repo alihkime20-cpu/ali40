@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { COOKIE_CONSENT_STORAGE_KEY, readCookieConsent, writeCookieConsent } from "../client/src/lib/cookieConsent";
 import { CONTACT_PAGE_TITLE, OFFICIAL_EMAIL, WHATSAPP_BUSINESS_NUMBER, WHATSAPP_BUSINESS_URL } from "../client/src/pages/LegalPages";
-import { tools, articles } from "../client/src/lib/sabacn";
+import { articles } from "../client/src/lib/sabacn";
 
 describe("SABACUN readiness content", () => {
   it("persists an explicit cookie preference", () => {
@@ -20,9 +20,7 @@ describe("SABACUN readiness content", () => {
     expect(OFFICIAL_EMAIL).toBe("alihkime20@gmail.com");
   });
 
-  it("contains real tools and original knowledge entries", () => {
-    expect(tools.length).toBeGreaterThanOrEqual(10);
-    expect(tools.every(tool => tool.slug && tool.name && tool.description)).toBe(true);
+  it("keeps the tools catalog empty and knowledge entries valid", () => {
     expect(articles.length).toBeGreaterThanOrEqual(3);
     expect(articles.every(article => article.slug && article.title && article.excerpt)).toBe(true);
   });
