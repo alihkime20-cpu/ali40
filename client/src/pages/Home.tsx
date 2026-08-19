@@ -1,10 +1,11 @@
 import { Link } from "wouter";
-import { ArrowLeft, Check, ChevronLeft, FileImage, ImageDown, LockKeyhole, Menu, Search, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronLeft, FileImage, FileText, ImageDown, LockKeyhole, Menu, Search, Sparkles, X } from "lucide-react";
 import { useState } from "react";
 
 const tools = [
   { href: "/tools/image-compressor", icon: ImageDown, title: "ضغط الصور اونلاين مجانًا", text: "قلّل حجم صور JPG وPNG محليًا، مع جودة قابلة للتحكم ومقارنة الحجم قبل وبعد الضغط." },
   { href: "/tools/image-converter", icon: FileImage, title: "تحويل الصور إلى JPG وPNG وWebP", text: "حوّل صورك إلى الصيغة المناسبة باستخدام Canvas داخل المتصفح، دون رفع الملفات إلى أي خادم." },
+  { href: "/tools/merge-pdf", icon: FileText, title: "دمج ملفات PDF مجانًا", text: "اجمع عدة ملفات PDF في ملف واحد محليًا، مع إعادة الترتيب وكشف التكرار دون رفع ملفاتك." },
 ];
 
 function Logo() {
@@ -65,7 +66,7 @@ export default function Home() {
         </section>
         <section id="tools" className="mx-auto max-w-7xl px-4 py-16 lg:px-8" aria-labelledby="tools-heading">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between"><div><div className="mb-3 text-sm font-bold text-[#1c615d]">أدوات SABACUN</div><h2 id="tools-heading" className="text-3xl font-bold text-[#123f45]">اختر الأداة التي تحتاجها</h2><p className="mt-3 max-w-2xl leading-8 text-[#687a7d]">أدوات عملية تعمل داخل متصفحك مباشرة، مع بقاء ملفاتك على جهازك.</p></div><label className="relative block w-full md:max-w-xs"><span className="sr-only">ابحث عن أداة</span><Search className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#718084]" size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ابحث عن أداة" className="focus-ring w-full rounded-xl border border-[#dbe4df] bg-white py-3 pl-4 pr-11 text-sm text-[#123f45] outline-none" /></label></div>
-          <div className="mt-8 grid gap-5 md:grid-cols-2">{filteredTools.map(({ href, icon: Icon, title, text }) => <Link key={href} href={href} className="focus-ring group rounded-[2rem] border bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"><div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#edf5ef] text-[#1c615d]"><Icon size={28} /></div><h3 className="mt-6 text-2xl font-bold text-[#123f45]">{title}</h3><p className="mt-3 leading-8 text-[#687a7d]">{text}</p><span className="mt-6 inline-flex items-center gap-2 font-bold text-[#1c615d]">فتح الأداة <ArrowLeft size={17} className="transition group-hover:-translate-x-1" /></span></Link>)}</div>
+          <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{filteredTools.map(({ href, icon: Icon, title, text }) => <Link key={href} href={href} className="focus-ring group rounded-[2rem] border bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"><div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#edf5ef] text-[#1c615d]"><Icon size={28} /></div><h3 className="mt-6 text-2xl font-bold text-[#123f45]">{title}</h3><p className="mt-3 leading-8 text-[#687a7d]">{text}</p><span className="mt-6 inline-flex items-center gap-2 font-bold text-[#1c615d]">فتح الأداة <ArrowLeft size={17} className="transition group-hover:-translate-x-1" /></span></Link>)}</div>
           {filteredTools.length === 0 && <p className="mt-6 rounded-2xl border border-dashed border-[#cbd9d2] bg-white p-6 text-center text-[#687a7d]">لا توجد أداة مطابقة لبحثك.</p>}
         </section>
         <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
