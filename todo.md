@@ -208,3 +208,22 @@
 
 - [x] تشغيل فحص موثق للمسارات العامة وملفات robots.txt وsitemap.xml مع مخرجات HTTP صريحة.
 - [x] إضافة اختبار آلي أو سكربت تدقيق قابل للتكرار لهذه المسارات وملفات SEO.
+
+# GitHub Final Synchronization
+
+- [x] التحقق من أن HEAD المحلي يساوي commit SABACUN الموثق b807a0d64bc98d3b4d5543b07980508abc609876 وأن شجرة العمل لا تحتوي تغييرات غير مقصودة (أُنجز قبل commit إصلاح CI اللاحق).
+- [x] دفع commit b807a0d64bc98d3b4d5543b07980508abc609876 إلى GitHub main دون تعديل المنتج.
+- [x] التحقق من أن GitHub main يشير إلى SHA المطلوب وتسجيل النتيجة النهائية.
+
+# GitHub Upload Verification
+
+- [x] فحص SHA الحالي لفرع GitHub main وسجل آخر commit.
+- [x] مقارنة commit GitHub بآخر commit SABACUN موثق ومحتوى الملفات النهائية.
+- [x] فحص سجل GitHub Actions أو حالات التمريرات إن كانت متاحة.
+- [x] تقديم تقرير دقيق عن نجاح الرفع أو فشله دون تعديل المشروع قبل موافقة المستخدم.
+
+# GitHub Actions Environment Fix
+
+- [x] إضافة إعداد اختبار موثوق يوفّر VITE_APP_TITLE=SABACUN دون أسرار أو تغيير سلوك التطبيق.
+- [x] تشغيل pnpm test وpnpm check وpnpm build محلياً بعد الإصلاح.
+- [x] مزامنة commit الإصلاح مع GitHub main والتحقق من نجاح GitHub Actions.
