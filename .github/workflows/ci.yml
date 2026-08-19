@@ -17,6 +17,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      VITE_APP_TITLE: SABACUN
     steps:
       - name: Checkout
         uses: actions/checkout@v4
