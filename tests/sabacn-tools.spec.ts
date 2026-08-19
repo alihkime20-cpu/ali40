@@ -15,10 +15,11 @@ test("tools route shows an empty transition state and no tool links", async ({ p
   await expect(page.locator('a[href^="/tool/"]')).toHaveCount(0);
 });
 
-test("internal knowledge page has back navigation and remains usable on mobile", async ({ page }) => {
+test("homepage remains usable on mobile without knowledge links", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/knowledge");
-  await expect(page.getByRole("button", { name: "الرئيسية" })).toBeVisible();
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "من نحن" }).first()).toBeVisible();
+  await expect(page.getByText("مركز المعرفة")).toHaveCount(0);
   const dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
 });
