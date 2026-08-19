@@ -1,5 +1,5 @@
 {
-  "name": "global-news-ar",
+  "name": "sabacn",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
@@ -10,8 +10,7 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate",
-    "sync:news": "tsx scripts/sync-news-to-github.ts"
+    "db:push": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
