@@ -30,11 +30,14 @@ test("image tool accepts a valid image, downloads output, and resets", async ({ 
   await upload(page);
   await expect(page.getByText("sample.png")).toBeVisible();
   await expect(page.locator('img[alt="معاينة الصورة المختارة"]')).toBeVisible();
+  await expect(page.getByText("ملفاتك تُعالج محليًا في متصفحك ولا تُرفع لأي سيرفر.")).toBeVisible();
+  await expect(page.getByText(/الحجم قبل الضغط:/)).toContainText("بايت");
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "معالجة وتنزيل" }).click();
+  await page.getByRole("button", { name: "ضغط وتنزيل الصورة" }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe("sample.jpeg");
+  expect(download.suggestedFilename()).toBe("sample-compressed.png");
+  await expect(page.getByText(/الحجم بعد الضغط:/)).toContainText("بايت");
 
   await page.getByRole("button", { name: "إزالة" }).click();
   await expect(page.getByText("sample.png")).toHaveCount(0);
