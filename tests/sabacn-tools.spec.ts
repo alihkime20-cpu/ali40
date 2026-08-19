@@ -9,6 +9,7 @@ async function chooseFile(page: import("@playwright/test").Page, file: { name: s
 test("homepage remains free of legacy tool search UI", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /SABACUN/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "الأدوات" }).first()).toHaveAttribute("href", "/tools");
   await expect(page.getByRole("textbox", { name: "ابحث عن أداة" })).toHaveCount(0);
   await expect(page.locator('a[href^="/tool/"]')).toHaveCount(0);
 });

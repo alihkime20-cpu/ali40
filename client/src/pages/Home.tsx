@@ -18,13 +18,13 @@ function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
         <Logo />
         <nav className="hidden items-center gap-7 text-sm font-semibold text-[#51676b] md:flex">
-          <Link className="focus-ring hover:text-[#123f45]" href="/about">من نحن</Link>
+          <Link className="focus-ring hover:text-[#123f45]" href="/tools">الأدوات</Link><Link className="focus-ring hover:text-[#123f45]" href="/about">من نحن</Link>
           <Link className="focus-ring hover:text-[#123f45]" href="/contact">اتصل بنا</Link>
         </nav>
         <Link href="/contact" className="focus-ring hidden rounded-xl bg-[#123f45] px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#1d5960] md:block">تواصل معنا</Link>
         <button className="focus-ring rounded-xl p-2 md:hidden" onClick={() => setOpen((value) => !value)} aria-label="فتح القائمة">{open ? <X /> : <Menu />}</button>
       </div>
-      {open && <div className="border-t border-[#dbe4df] bg-white px-4 py-4 md:hidden"><div className="grid gap-2 text-sm font-semibold"><Link onClick={() => setOpen(false)} className="rounded-xl p-3 hover:bg-[#edf5ef]" href="/about">من نحن</Link><Link onClick={() => setOpen(false)} className="rounded-xl p-3 hover:bg-[#edf5ef]" href="/contact">اتصل بنا</Link></div></div>}
+      {open && <div className="border-t border-[#dbe4df] bg-white px-4 py-4 md:hidden"><div className="grid gap-2 text-sm font-semibold"><Link onClick={() => setOpen(false)} className="rounded-xl p-3 hover:bg-[#edf5ef]" href="/tools">الأدوات</Link><Link onClick={() => setOpen(false)} className="rounded-xl p-3 hover:bg-[#edf5ef]" href="/about">من نحن</Link><Link onClick={() => setOpen(false)} className="rounded-xl p-3 hover:bg-[#edf5ef]" href="/contact">اتصل بنا</Link></div></div>}
     </header>
   );
 }
@@ -40,7 +40,7 @@ export default function Home() {
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d6e3da] bg-white/80 px-4 py-2 text-xs font-bold text-[#1c615d]"><Sparkles size={15} /> مساحة عربية عملية</div>
               <h1 className="max-w-3xl text-4xl font-bold leading-[1.25] tracking-tight text-[#123f45] sm:text-5xl lg:text-6xl">SABACUN، <span className="text-[#c38d26]">نبني المفيد</span> بهدوء</h1>
               <p className="mt-6 max-w-2xl text-lg leading-9 text-[#5d7174]">منصة عربية مستقلة يطوّرها مهندس علي لتقديم تجارب رقمية واضحة، مع احترام الخصوصية والابتعاد عن التعقيد.</p>
-              <div className="mt-8 flex flex-wrap gap-3"><Link href="/about" className="focus-ring inline-flex items-center gap-2 rounded-xl bg-[#123f45] px-5 py-3 font-bold text-white shadow-md hover:bg-[#1d5960]">تعرف علينا <ArrowLeft size={17} /></Link><Link href="/contact" className="focus-ring inline-flex items-center gap-2 rounded-xl border bg-white px-5 py-3 font-bold text-[#1c615d] hover:border-[#d9a947]">تواصل معنا</Link></div>
+              <div className="mt-8 flex flex-wrap gap-3"><Link href="/tools" className="focus-ring inline-flex items-center gap-2 rounded-xl bg-[#123f45] px-5 py-3 font-bold text-white shadow-md hover:bg-[#1d5960]">اكتشف الأدوات <ArrowLeft size={17} /></Link><Link href="/about" className="focus-ring inline-flex items-center gap-2 rounded-xl border bg-white px-5 py-3 font-bold text-[#1c615d] hover:border-[#d9a947]">تعرف علينا</Link><Link href="/contact" className="focus-ring inline-flex items-center gap-2 rounded-xl border bg-white px-5 py-3 font-bold text-[#1c615d] hover:border-[#d9a947]">تواصل معنا</Link></div>
             </div>
             <div className="relative hidden min-h-[390px] lg:block">
               <div className="noise absolute inset-8 rotate-3 rounded-[3rem] bg-[#123f45] shadow-[0_30px_90px_rgba(18,63,69,.24)]" />
@@ -57,7 +57,7 @@ export default function Home() {
         <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
           <div className="noise flex flex-col gap-6 rounded-[2rem] bg-[#123f45] p-8 text-white md:flex-row md:items-center md:justify-between md:p-10">
             <div><div className="mb-4 flex items-center gap-3 text-[#f4d384]"><LockKeyhole size={20} /><span className="font-bold">الخصوصية والوضوح</span></div><h2 className="text-2xl font-bold">مساحة رقمية قيد البناء بعناية</h2><p className="mt-3 max-w-2xl leading-8 text-white/70">نوضح ما نقدمه وما لا نقدمه، ونحافظ على تواصل مباشر مع زوار SABACUN أثناء تطوير التجارب القادمة.</p></div>
-            <Link href="/privacy" className="focus-ring inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#d9a947] px-5 py-3 font-bold text-[#123f45]">سياسة الخصوصية <ChevronLeft size={18} /></Link>
+            <Link href="/tools" className="focus-ring inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#d9a947] px-5 py-3 font-bold text-[#123f45]">اكتشف الأدوات <ChevronLeft size={18} /></Link>
           </div>
         </section>
       </main>
@@ -67,5 +67,5 @@ export default function Home() {
 }
 
 function Footer() {
-  return <footer className="border-t bg-white"><div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-8"><div><Logo /><p className="mt-4 max-w-xs leading-7 text-[#718084]">SABACUN — مساحة عربية للتجارب الرقمية الواضحة.</p><p className="mt-3 text-sm font-semibold text-[#1c615d]">أسسها ويديرها مهندس علي</p></div><div><h3 className="mb-4 font-bold text-[#173238]">الموقع</h3><div className="grid gap-3 text-sm text-[#687a7d]"><Link href="/about">من نحن</Link><Link href="/contact">اتصل بنا</Link></div></div><div><h3 className="mb-4 font-bold text-[#173238]">السياسات والتواصل</h3><div className="grid gap-3 text-sm text-[#687a7d]"><Link href="/privacy">الخصوصية</Link><Link href="/terms">الشروط</Link><Link href="/cookies">ملفات الارتباط</Link><Link href="/content-policy">سياسة المحتوى</Link><a href="mailto:alihkime20@gmail.com">البريد الإلكتروني</a><a href="https://wa.me/9647740669189">واتساب الأعمال</a></div></div></div><div className="border-t"><div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-[#8a999a] sm:flex-row sm:items-center sm:justify-between lg:px-8"><span>© {new Date().getFullYear()} SABACUN. جميع الحقوق محفوظة. إدارة: مهندس علي</span><span className="inline-flex items-center gap-2"><Check size={14} className="text-[#1c615d]" /> تجربة واضحة ومسؤولة</span></div></div></footer>;
+  return <footer className="border-t bg-white"><div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-8"><div><Logo /><p className="mt-4 max-w-xs leading-7 text-[#718084]">SABACUN — مساحة عربية للتجارب الرقمية الواضحة.</p><p className="mt-3 text-sm font-semibold text-[#1c615d]">أسسها ويديرها مهندس علي</p></div><div><h3 className="mb-4 font-bold text-[#173238]">الموقع</h3><div className="grid gap-3 text-sm text-[#687a7d]"><Link href="/tools">الأدوات</Link><Link href="/about">من نحن</Link><Link href="/contact">اتصل بنا</Link></div></div><div><h3 className="mb-4 font-bold text-[#173238]">السياسات والتواصل</h3><div className="grid gap-3 text-sm text-[#687a7d]"><Link href="/privacy">الخصوصية</Link><Link href="/terms">الشروط</Link><Link href="/cookies">ملفات الارتباط</Link><Link href="/content-policy">سياسة المحتوى</Link><a href="mailto:alihkime20@gmail.com">البريد الإلكتروني</a><a href="https://wa.me/9647740669189">واتساب الأعمال</a></div></div></div><div className="border-t"><div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-[#8a999a] sm:flex-row sm:items-center sm:justify-between lg:px-8"><span>© {new Date().getFullYear()} SABACUN. جميع الحقوق محفوظة. إدارة: مهندس علي</span><span className="inline-flex items-center gap-2"><Check size={14} className="text-[#1c615d]" /> تجربة واضحة ومسؤولة</span></div></div></footer>;
 }
