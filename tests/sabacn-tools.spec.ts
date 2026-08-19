@@ -6,12 +6,17 @@ async function chooseFile(page: import("@playwright/test").Page, file: { name: s
   await page.locator('input[type="file"]').setInputFiles(file);
 }
 
-test("homepage remains free of legacy tool search UI", async ({ page }) => {
+test("homepage lists tools and filters them with search", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /SABACUN/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: "الأدوات" }).first()).toHaveAttribute("href", "/tools");
-  await expect(page.getByRole("textbox", { name: "ابحث عن أداة" })).toHaveCount(0);
-  await expect(page.locator('a[href^="/tool/"]')).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "ابحث عن أداة" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ضغط الصور اونلاين مجانًا" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "تحويل الصور إلى JPG وPNG وWebP" })).toBeVisible();
+  await page.getByRole("textbox", { name: "ابحث عن أداة" }).fill("ضغط");
+  await expect(page.getByRole("heading", { name: "ضغط الصور اونلاين مجانًا" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "تحويل الصور إلى JPG وPNG وWebP" })).toBeHidden();
+  await page.getByRole("textbox", { name: "ابحث عن أداة" }).fill("غير موجود");
+  await expect(page.getByText("لا توجد أداة مطابقة لبحثك.")).toBeVisible();
 });
 
 test("tools directory exposes only stage-one tools", async ({ page }) => {
