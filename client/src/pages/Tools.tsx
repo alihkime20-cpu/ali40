@@ -6,6 +6,7 @@ const tools = [
   { href: "/tools/image-compressor", icon: ImageDown, title: "ضغط الصور اونلاين مجانًا", text: "قلّل حجم صور JPG وPNG محليًا، مع جودة قابلة للتحكم ومقارنة الحجم قبل وبعد الضغط." },
   { href: "/tools/image-converter", icon: FileImage, title: "تحويل الصور إلى JPG وPNG وWebP", text: "حوّل صورك إلى الصيغة المناسبة باستخدام Canvas داخل المتصفح، دون رفع الملفات إلى أي خادم." },
   { href: "/tools/merge-pdf", icon: FileText, title: "دمج ملفات PDF مجانًا", text: "اجمع عدة ملفات PDF في ملف واحد محليًا، مع إعادة الترتيب وكشف التكرار دون رفع ملفاتك." },
+  { href: "/tools/images-to-pdf", icon: FileImage, title: "تحويل الصور إلى PDF مجانًا", text: "حوّل صور JPG وPNG وWebP إلى صفحات PDF مرتبة محليًا، دون رفع الصور إلى أي خادم." },
 ];
 
 export default function Tools() {
