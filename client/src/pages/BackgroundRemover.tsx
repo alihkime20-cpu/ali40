@@ -100,6 +100,9 @@ export default function BackgroundRemover() {
       if (runId !== runRef.current) return;
       setStatus("processing");
       const output = await module.removeBackground(file, {
+        // The quantized model keeps local processing reliable on mobile devices.
+        model: "isnet_quint8",
+        device: "cpu",
         progress: (_key: string, current: number, total: number) => {
           if (runId === runRef.current && total > 0) setProgress(Math.min(99, Math.round((current / total) * 100)));
         },
