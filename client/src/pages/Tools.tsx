@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { ArrowLeft, FileImage, FileText, ImageDown, ShieldCheck } from "lucide-react";
+import { ArrowLeft, FileImage, FileText, ImageDown, ShieldCheck, WandSparkles } from "lucide-react";
 import BackButton from "@/components/BackButton";
 
 const tools = [
@@ -7,6 +7,7 @@ const tools = [
   { href: "/tools/image-converter", icon: FileImage, title: "تحويل الصور إلى JPG وPNG وWebP", text: "حوّل صورك إلى الصيغة المناسبة باستخدام Canvas داخل المتصفح، دون رفع الملفات إلى أي خادم." },
   { href: "/tools/merge-pdf", icon: FileText, title: "دمج ملفات PDF مجانًا", text: "اجمع عدة ملفات PDF في ملف واحد محليًا، مع إعادة الترتيب وكشف التكرار دون رفع ملفاتك." },
   { href: "/tools/images-to-pdf", icon: FileImage, title: "تحويل الصور إلى PDF مجانًا", text: "حوّل صور JPG وPNG وWebP إلى صفحات PDF مرتبة محليًا، دون رفع الصور إلى أي خادم." },
+  { href: "/tools/background-remover", icon: WandSparkles, title: "إزالة الخلفية من الصور مجانًا", text: "أزل خلفية الصور محليًا داخل متصفحك وحمّل PNG شفافاً دون رفع الصورة إلى خادم معالجة." },
 ];
 
 export default function Tools() {

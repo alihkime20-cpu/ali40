@@ -30,14 +30,15 @@ test("homepage lists tools and filters them with search", async ({ page }) => {
   await expect(page.getByText("لا توجد أداة مطابقة لبحثك.")).toBeVisible();
 });
 
-test("tools directory exposes the three approved tools", async ({ page }) => {
+test("tools directory exposes the five approved tools", async ({ page }) => {
   await page.goto("/tools");
   await expect(page.getByRole("heading", { name: "أدوات SABACUN الرقمية" })).toBeVisible();
   await expect(page.getByRole("link", { name: /ضغط الصور/ })).toHaveAttribute("href", "/tools/image-compressor");
   await expect(page.getByRole("link", { name: "تحويل الصور إلى JPG وPNG وWebP" })).toHaveAttribute("href", "/tools/image-converter");
   await expect(page.getByRole("link", { name: /دمج ملفات PDF/ })).toHaveAttribute("href", "/tools/merge-pdf");
   await expect(page.getByRole("link", { name: /تحويل الصور إلى PDF/ })).toHaveAttribute("href", "/tools/images-to-pdf");
-  await expect(page.locator('a[href^="/tools/"]')).toHaveCount(4);
+  await expect(page.getByRole("link", { name: /إزالة الخلفية/ })).toHaveAttribute("href", "/tools/background-remover");
+  await expect(page.locator('a[href^="/tools/"]')).toHaveCount(5);
 });
 
 test("image compressor processes, downloads, rejects invalid files, and resets", async ({ page }) => {
@@ -147,6 +148,31 @@ test("homepage remains usable on mobile without knowledge links", async ({ page 
   await page.goto("/");
   await expect(page.getByRole("link", { name: "من نحن" }).first()).toBeVisible();
   await expect(page.getByText("مركز المعرفة")).toHaveCount(0);
+  const dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+});
+
+test("background remover validates inputs, previews, processes locally, downloads transparent PNG, resets, and works on mobile", async ({ page }) => {
+  test.setTimeout(180000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/tools/background-remover");
+  await expect(page.getByRole("heading", { name: "إزالة الخلفية من الصور مجانًا" })).toBeVisible();
+  await chooseFile(page, { name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("not an image") });
+  await expect(page.getByRole("alert")).toContainText("JPG أو JPEG أو PNG");
+  await chooseFile(page, { name: "large.jpg", mimeType: "image/jpeg", buffer: Buffer.alloc(10 * 1024 * 1024 + 1) });
+  await expect(page.getByRole("alert")).toContainText("10MB");
+  await chooseFile(page, { name: "portrait.png", mimeType: "image/png", buffer: tinyPng });
+  await expect(page.getByAltText("معاينة portrait.png")).toBeVisible();
+  await page.getByRole("button", { name: "إزالة الخلفية" }).click();
+  await expect(page.getByRole("status")).toContainText(/جاري تجهيز أداة إزالة الخلفية|جارٍ إزالة الخلفية محلياً/, { timeout: 10000 });
+  await expect(page.getByAltText("معاينة الصورة بعد إزالة الخلفية")).toBeVisible({ timeout: 150000 });
+  await expect(page.getByText(/^PNG شفاف/)).toBeVisible();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "تنزيل PNG الشفاف" }).click();
+  const downloaded = await download;
+  expect(downloaded.suggestedFilename()).toBe("sabacn-background-removed.png");
+  await page.getByRole("button", { name: "إعادة ضبط" }).click();
+  await expect(page.getByAltText("معاينة portrait.png")).toHaveCount(0);
   const dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
 });

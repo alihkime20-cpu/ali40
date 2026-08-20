@@ -7,6 +7,7 @@ const checks = [
   { path: "/tools/image-converter", status: 200, includes: "id=\"root\"" },
   { path: "/tools/merge-pdf", status: 200, includes: "id=\"root\"" },
   { path: "/tools/images-to-pdf", status: 200, includes: "id=\"root\"" },
+  { path: "/tools/background-remover", status: 200, includes: "id=\"root\"" },
   { path: "/about", status: 200, includes: "id=\"root\"" },
   { path: "/contact", status: 200, includes: "id=\"root\"" },
   { path: "/privacy", status: 200, includes: "id=\"root\"" },

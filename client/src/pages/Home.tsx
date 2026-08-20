@@ -7,6 +7,7 @@ const tools = [
   { href: "/tools/image-converter", icon: FileImage, title: "تحويل الصور إلى JPG وPNG وWebP", text: "حوّل صورك إلى الصيغة المناسبة باستخدام Canvas داخل المتصفح، دون رفع الملفات إلى أي خادم." },
   { href: "/tools/merge-pdf", icon: FileText, title: "دمج ملفات PDF مجانًا", text: "اجمع عدة ملفات PDF في ملف واحد محليًا، مع إعادة الترتيب وكشف التكرار دون رفع ملفاتك." },
   { href: "/tools/images-to-pdf", icon: FileImage, title: "تحويل الصور إلى PDF مجانًا", text: "حوّل صور JPG وPNG وWebP إلى صفحات PDF مرتبة محليًا، دون رفع الصور إلى أي خادم." },
+  { href: "/tools/background-remover", icon: Sparkles, title: "إزالة الخلفية من الصور مجانًا", text: "أزل خلفية الصور محليًا داخل متصفحك وحمّل PNG شفافاً دون رفع الصورة إلى خادم معالجة." },
 ];
 
 function Logo() {
