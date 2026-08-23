@@ -39,13 +39,13 @@ export const campaignColors: Record<CampaignType, string> = {
   volunteer: "#1c615d",
 };
 
-export const mockCampaigns: Campaign[] = [
+export const publishedCampaigns: Campaign[] = [
   { id: "c1", type: "blood", title: "نحتاج متبرعين لفصيلة O+", description: "مساعدة عاجلة لحالة تحتاج إلى نقل دم. كل تبرع قد يصنع فرقاً حقيقياً.", location: "موقع يحدده الناشر", date: "2026-08-28", time: "09:00", registered: 8, goal: 12, publisher: "فريق أمل الطبي", image: "blood", status: "open", extra: "يرجى إحضار البطاقة الوطنية والتأكد من ملاءمة حالتك الصحية قبل التبرع." },
   { id: "c2", type: "volunteer", title: "تشجير وتنظيف مساحة عامة", description: "صباح تطوعي لزراعة الأشجار وتنظيف مساحة عامة بمشاركة أهل المجتمع.", location: "موقع يحدده الناشر", date: "2026-09-05", time: "07:30", registered: 24, goal: 40, publisher: "مساحة خضراء", image: "trees", status: "open", extra: "الأدوات والشتلات متوفرة. أحضر قبعة وماء للشرب." },
   { id: "c3", type: "blood", title: "حملة تبرع بالدم مفتوحة", description: "يوم مفتوح للتبرع بالدم بالتعاون مع بنك الدم، مع فريق طبي متخصص.", location: "موقع يحدده الناشر", date: "2026-09-12", time: "10:00", registered: 11, goal: 50, publisher: "بنك الدم المركزي", image: "blood", status: "open" },
 ];
 
-export const mockBloodRequests: BloodRequest[] = [
+export const bloodRequests: BloodRequest[] = [
   { id: "b1", bloodType: "O+", city: "الموقع يحدده مقدم الطلب", hospital: "جهة صحية معتمدة", neededDate: "2026-08-28", details: "حالة طارئة تحتاج إلى متبرعين أصحاء من الفصيلة نفسها.", status: "needed", responders: 8 },
   { id: "b2", bloodType: "A-", city: "الموقع يحدده مقدم الطلب", hospital: "جهة صحية معتمدة", neededDate: "2026-08-29", details: "مريض يستعد لعملية جراحية ويحتاج إلى دعم بنك الدم.", status: "matched", responders: 4 },
   { id: "b3", bloodType: "B+", city: "الموقع يحدده مقدم الطلب", hospital: "جهة صحية معتمدة", neededDate: "2026-09-02", details: "طلب تبرع مجدول لدعم المرضى.", status: "needed", responders: 2 },
@@ -55,7 +55,7 @@ export const mockBloodRequests: BloodRequest[] = [
 export const currentUser = { name: "زائر SABACUN", bio: "أؤمن أن المشاركة الصغيرة تصنع أثراً كبيراً.", initials: "ز" };
 
 export function getCampaign(id?: string) {
-  return mockCampaigns.find((campaign) => campaign.id === id);
+  return publishedCampaigns.find((campaign) => campaign.id === id);
 }
 
 export function getStoredRegistrations(): string[] {
@@ -75,5 +75,5 @@ export function setStoredCreatedCampaigns(campaigns: Campaign[]) {
 }
 
 export function allCampaigns() {
-  return [...getStoredCreatedCampaigns(), ...mockCampaigns];
+  return [...getStoredCreatedCampaigns(), ...publishedCampaigns];
 }

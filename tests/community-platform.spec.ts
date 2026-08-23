@@ -50,12 +50,12 @@ test("campaign details supports registration and cancellation", async ({ page })
   await expect(page.getByRole("button", { name: "سجل الآن" })).toBeVisible();
 });
 
-test("create campaign validates and stores a reviewed mock campaign", async ({ page }) => {
+test("create campaign validates and stores a campaign for review", async ({ page }) => {
   await page.goto("/create");
   await acceptCookies(page);
   await page.getByRole("button", { name: /إرسال للمراجعة/ }).click();
   await expect(page.getByRole("status")).toContainText("أكمل الحقول الأساسية");
-  await page.getByLabel("عنوان الحملة").fill("حملة تنظيف تجريبية");
+  await page.getByLabel("عنوان الحملة").fill("حملة تنظيف مساحة عامة");
   await page.getByLabel("وصف الحملة").fill("نشاط مجتمعي لتنظيف الحي بمشاركة السكان.");
   await page.getByLabel("الموقع").fill("الموقع العام · نقطة التجمع");
   await page.getByLabel("التاريخ").fill("2026-09-20");
