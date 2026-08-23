@@ -16,10 +16,10 @@ test("homepage shows community feed, search, categories and campaign CTA", async
   await expect(page.getByRole("heading", { name: "شارك في حملة، واترك أثراً." })).toBeVisible();
   await expect(page.getByRole("link", { name: /انشر حملة/ }).first()).toBeVisible();
   await expect(page.getByPlaceholder("ابحث عن حملة أو مدينة")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "نحتاج متبرعين لفصيلة O+ في بغداد" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "نحتاج متبرعين لفصيلة O+" })).toBeVisible();
   await page.getByPlaceholder("ابحث عن حملة أو مدينة").fill("تشجير");
-  await expect(page.getByRole("heading", { name: "تشجير ضفاف نهر دجلة" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "نحتاج متبرعين لفصيلة O+ في بغداد" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "تشجير وتنظيف مساحة عامة" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "نحتاج متبرعين لفصيلة O+" })).toHaveCount(0);
 });
 
 test("blood and volunteer pages expose actionable campaign cards", async ({ page }) => {
@@ -31,13 +31,18 @@ test("blood and volunteer pages expose actionable campaign cards", async ({ page
   await expect(page.getByRole("button", { name: "شكراً لاستجابتك" })).toBeVisible();
   await page.goto("/volunteer");
   await expect(page.getByRole("heading", { name: "وقتك يمكن أن يغيّر مكاناً" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "تشجير ضفاف نهر دجلة" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "تشجير وتنظيف مساحة عامة" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /انشر فرصة تطوع/ })).toBeVisible();
+  await page.goto("/publish/blood");
+  await expect(page.getByRole("heading", { name: "انشر طلب تبرع بالدم" })).toBeVisible();
+  await page.goto("/publish/volunteer");
+  await expect(page.getByRole("heading", { name: "انشر فرصة تطوع" })).toBeVisible();
 });
 
 test("campaign details supports registration and cancellation", async ({ page }) => {
   await page.goto("/campaign/c1");
   await acceptCookies(page);
-  await expect(page.getByRole("heading", { name: "نحتاج متبرعين لفصيلة O+ في بغداد" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "نحتاج متبرعين لفصيلة O+" })).toBeVisible();
   await page.getByRole("button", { name: "سجل الآن" }).click();
   await expect(page.getByRole("button", { name: "مسجل" })).toBeVisible();
   await expect(page.getByRole("status")).toContainText("تم تسجيلك");
@@ -52,7 +57,7 @@ test("create campaign validates and stores a reviewed mock campaign", async ({ p
   await expect(page.getByRole("status")).toContainText("أكمل الحقول الأساسية");
   await page.getByLabel("عنوان الحملة").fill("حملة تنظيف تجريبية");
   await page.getByLabel("وصف الحملة").fill("نشاط مجتمعي لتنظيف الحي بمشاركة السكان.");
-  await page.getByLabel("الموقع").fill("بغداد · الكرادة");
+  await page.getByLabel("الموقع").fill("الموقع العام · نقطة التجمع");
   await page.getByLabel("التاريخ").fill("2026-09-20");
   await page.getByLabel("الوقت").fill("10:00");
   await page.getByRole("button", { name: /إرسال للمراجعة/ }).click();
@@ -68,6 +73,8 @@ test("profile and mobile navigation remain usable without old tools routes", asy
   await viewportCheck(page);
   await page.goto("/tools/image-compressor");
   await expect(page.getByText("الصفحة غير موجودة")).toBeVisible();
+  await expect(page.getByText("مبادرة مجتمعية")).toHaveCount(0);
+  await expect(page.getByText("وجبات")).toHaveCount(0);
   await page.goto("/");
   await expect(page.getByText("مركز المعرفة")).toHaveCount(0);
   await viewportCheck(page);

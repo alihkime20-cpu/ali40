@@ -14,6 +14,7 @@ function Router() {
     <Route path="/" component={HomePage} />
     <Route path="/blood" component={BloodPage} />
     <Route path="/volunteer" component={VolunteerPage} />
+    <Route path="/publish/:section" component={CreateCampaignPage} />
     <Route path="/create" component={CreateCampaignPage} />
     <Route path="/campaign/:id" component={CampaignDetailsPage} />
     <Route path="/profile" component={ProfilePage} />

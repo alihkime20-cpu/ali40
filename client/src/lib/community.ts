@@ -1,4 +1,4 @@
-export type CampaignType = "blood" | "volunteer" | "initiative";
+export type CampaignType = "blood" | "volunteer";
 export type CampaignStatus = "open" | "review" | "full";
 export type BloodStatus = "needed" | "matched" | "complete";
 
@@ -32,28 +32,24 @@ export type BloodRequest = {
 export const campaignLabels: Record<CampaignType, string> = {
   blood: "تبرع بالدم",
   volunteer: "تطوع",
-  initiative: "مبادرة مجتمعية",
 };
 
 export const campaignColors: Record<CampaignType, string> = {
   blood: "#b64b4b",
   volunteer: "#1c615d",
-  initiative: "#bd8426",
 };
 
 export const mockCampaigns: Campaign[] = [
-  { id: "c1", type: "blood", title: "نحتاج متبرعين لفصيلة O+ في بغداد", description: "مساعدة عاجلة لطفل يحتاج إلى نقل دم في مستشفى مدينة الطب. كل تبرع قد يصنع فرقاً حقيقياً.", location: "بغداد · مدينة الطب", date: "2026-08-28", time: "09:00", registered: 8, goal: 12, publisher: "فريق أمل الطبي", image: "blood", status: "open", extra: "يرجى إحضار البطاقة الوطنية والتأكد من تناول وجبة خفيفة قبل التبرع." },
-  { id: "c2", type: "volunteer", title: "تشجير ضفاف نهر دجلة", description: "صباح تطوعي لزراعة الأشجار وتنظيف المساحات القريبة من النهر بمشاركة أهل المنطقة.", location: "بغداد · أبو نؤاس", date: "2026-09-05", time: "07:30", registered: 24, goal: 40, publisher: "مساحة خضراء", image: "trees", status: "open", extra: "الأدوات والشتلات متوفرة. أحضر قبعة وماء للشرب." },
-  { id: "c3", type: "initiative", title: "حقيبة المدرسة لكل طفل", description: "مبادرة محلية لجمع الحقائب والقرطاسية وتوزيعها على الأطفال قبل بدء العام الدراسي.", location: "الموصل · مركز المدينة", date: "2026-09-10", time: "16:00", registered: 17, goal: 25, publisher: "مبادرة أثر", image: "school", status: "open" },
-  { id: "c4", type: "volunteer", title: "وجبات دافئة للعائلات المتعففة", description: "نستعد معاً لتجهيز وتوزيع وجبات نهاية الأسبوع للعائلات المحتاجة في الحي.", location: "البصرة · العشار", date: "2026-08-30", time: "14:00", registered: 30, goal: 30, publisher: "سواعد الخير", image: "food", status: "full" },
-  { id: "c5", type: "blood", title: "حملة تبرع بالدم في أربيل", description: "يوم مفتوح للتبرع بالدم بالتعاون مع بنك الدم المركزي، مع فريق طبي متخصص.", location: "أربيل · عينكاوة", date: "2026-09-12", time: "10:00", registered: 11, goal: 50, publisher: "بنك الدم المركزي", image: "blood", status: "open" },
+  { id: "c1", type: "blood", title: "نحتاج متبرعين لفصيلة O+", description: "مساعدة عاجلة لحالة تحتاج إلى نقل دم. كل تبرع قد يصنع فرقاً حقيقياً.", location: "موقع يحدده الناشر", date: "2026-08-28", time: "09:00", registered: 8, goal: 12, publisher: "فريق أمل الطبي", image: "blood", status: "open", extra: "يرجى إحضار البطاقة الوطنية والتأكد من ملاءمة حالتك الصحية قبل التبرع." },
+  { id: "c2", type: "volunteer", title: "تشجير وتنظيف مساحة عامة", description: "صباح تطوعي لزراعة الأشجار وتنظيف مساحة عامة بمشاركة أهل المجتمع.", location: "موقع يحدده الناشر", date: "2026-09-05", time: "07:30", registered: 24, goal: 40, publisher: "مساحة خضراء", image: "trees", status: "open", extra: "الأدوات والشتلات متوفرة. أحضر قبعة وماء للشرب." },
+  { id: "c3", type: "blood", title: "حملة تبرع بالدم مفتوحة", description: "يوم مفتوح للتبرع بالدم بالتعاون مع بنك الدم، مع فريق طبي متخصص.", location: "موقع يحدده الناشر", date: "2026-09-12", time: "10:00", registered: 11, goal: 50, publisher: "بنك الدم المركزي", image: "blood", status: "open" },
 ];
 
 export const mockBloodRequests: BloodRequest[] = [
-  { id: "b1", bloodType: "O+", city: "بغداد", hospital: "مستشفى مدينة الطب", neededDate: "2026-08-28", details: "حالة أطفال طارئة تحتاج إلى متبرعين أصحاء من الفصيلة نفسها.", status: "needed", responders: 8 },
-  { id: "b2", bloodType: "A-", city: "النجف", hospital: "مستشفى الصدر التعليمي", neededDate: "2026-08-29", details: "مريض يستعد لعملية جراحية ويحتاج إلى دعم بنك الدم.", status: "matched", responders: 4 },
-  { id: "b3", bloodType: "B+", city: "البصرة", hospital: "مستشفى البصرة العام", neededDate: "2026-09-02", details: "طلب تبرع مجدول ضمن حملة مجتمعية لدعم المرضى.", status: "needed", responders: 2 },
-  { id: "b4", bloodType: "AB+", city: "كربلاء", hospital: "مركز الدم المركزي", neededDate: "2026-08-25", details: "تم توفير العدد المطلوب من المتبرعين.", status: "complete", responders: 7 },
+  { id: "b1", bloodType: "O+", city: "الموقع يحدده مقدم الطلب", hospital: "جهة صحية معتمدة", neededDate: "2026-08-28", details: "حالة طارئة تحتاج إلى متبرعين أصحاء من الفصيلة نفسها.", status: "needed", responders: 8 },
+  { id: "b2", bloodType: "A-", city: "الموقع يحدده مقدم الطلب", hospital: "جهة صحية معتمدة", neededDate: "2026-08-29", details: "مريض يستعد لعملية جراحية ويحتاج إلى دعم بنك الدم.", status: "matched", responders: 4 },
+  { id: "b3", bloodType: "B+", city: "الموقع يحدده مقدم الطلب", hospital: "جهة صحية معتمدة", neededDate: "2026-09-02", details: "طلب تبرع مجدول لدعم المرضى.", status: "needed", responders: 2 },
+  { id: "b4", bloodType: "AB+", city: "الموقع يحدده مقدم الطلب", hospital: "مركز دم معتمد", neededDate: "2026-08-25", details: "تم توفير العدد المطلوب من المتبرعين.", status: "complete", responders: 7 },
 ];
 
 export const currentUser = { name: "زائر SABACUN", bio: "أؤمن أن المشاركة الصغيرة تصنع أثراً كبيراً.", initials: "ز" };
