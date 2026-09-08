@@ -33,6 +33,10 @@ class Repository:
         if not new_rows: return []
         return self.client.table("education_news").insert(new_rows).execute().data
     def list_news(self, limit: int = 10): return self.client.table("education_news").select("id,title,summary,source_url,published_at,source_name").eq("is_active", True).order("published_at", desc=True).limit(limit).execute().data
+    def list_external_resources(self, category: str, branch_id: str | None = None, limit: int = 20):
+        query = self.client.table("external_resources").select("title,description,url,source_name,year,round").eq("category", category).eq("is_active", True)
+        if branch_id: query = query.eq("branch_id", branch_id)
+        return query.order("year", desc=True).limit(limit).execute().data
     def notification_users(self): return self.client.table("users").select("id,telegram_user_id").eq("is_blocked", False).eq("news_notifications", True).limit(10000).execute().data
     def mark_news_delivered(self, news_id: str, user_id: str): return self.client.table("education_news_deliveries").upsert({"news_id": news_id, "user_id": user_id}, on_conflict="news_id,user_id").execute()
     def set_news_notifications(self, telegram_user_id: int, enabled: bool): return self.client.table("users").update({"news_notifications": enabled}).eq("telegram_user_id", telegram_user_id).execute()

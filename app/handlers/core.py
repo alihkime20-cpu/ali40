@@ -41,6 +41,15 @@ async def _show_news(query, repo):
     text = "📰 أخبار التربية\n\n" + "\n\n".join(f"• {r['title']}\n{r.get('source_url', '')}" for r in rows)
     await query.edit_message_text(text[:3900])
 
+async def _show_external_resources(query, repo, category: str):
+    rows = repo.list_external_resources(category)
+    if not rows:
+        await query.edit_message_text("لا توجد روابط مضافة حاليًا.")
+        return
+    label = "📝 الأسئلة الوزارية" if category == "ministerial" else "🔗 الموارد التعليمية"
+    buttons = [[InlineKeyboardButton(r["title"], url=r["url"])] for r in rows]
+    await query.edit_message_text(f"{label}\n\nاضغط على الرابط لفتح المصدر الأصلي:", reply_markup=InlineKeyboardMarkup(buttons))
+
 async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query; await query.answer()
     repo, settings, data = context.application.bot_data["repo"], context.application.bot_data["settings"], query.data
@@ -50,6 +59,7 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if data == "admin:news": await query.edit_message_text(f"📰 تمت مزامنة {sync_news(repo)} خبر من المصدر الرسمي.")
         else: await _admin_section(query, data.split(":", 1)[1])
     elif data == "news": await _show_news(query, repo)
+    elif data in ("links:resource", "links:ministerial"): await _show_external_resources(query, repo, data.split(":", 1)[1])
     elif data == "favorites":
         rows = repo.list_favorites(query.from_user.id); text = "⭐ المفضلة\n\n" + ("\n".join(f"• {r.get('files', {}).get('title', 'ملف')}" for r in rows) if rows else "لا توجد مفضلات بعد."); await query.edit_message_text(text)
     elif data == "search": await query.edit_message_text("استخدم الأمر /search ثم اكتب عنوان الملف.")
