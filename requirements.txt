@@ -1,5 +1,5 @@
 python-telegram-bot==22.5
-supabase==2.18.1
+yt-dlp==2025.8.22
 pydantic-settings==2.10.1
 python-dotenv==1.1.1
 pytest==8.4.2
