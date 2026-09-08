@@ -2,7 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 from app.services.storage import MANHAJ_BUCKET, MINISTERIAL_BUCKET, StorageService
-from app.utils.security import is_admin, validate_pdf
+from app.utils.security import is_admin
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +13,12 @@ async def admin_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await message.reply_text("عذرًا، رفع الملفات متاح للمدير فقط.")
         return
     document = message.document
-    valid, error = validate_pdf(document.file_name, document.file_size, settings.max_file_size_bytes)
-    if not valid:
-        await message.reply_text(error); return
+    if not document or not document.file_name:
+        await message.reply_text("أرسل الملف كمستند Telegram مع اسم المادة في الوصف.")
+        return
+    if document.file_size and document.file_size > settings.max_file_size_bytes:
+        await message.reply_text(f"حجم الملف يتجاوز الحد المسموح ({settings.max_file_size_bytes // 1024 // 1024} MB).")
+        return
     parts = [p.strip() for p in (message.caption or "").split("|") if p.strip()]
     if not parts:
         await message.reply_text("أرسل اسم المادة فقط في وصف الملف، مثل: الرياضيات\n\nللملازم اختياريًا: الملازم|الرياضيات")
@@ -35,8 +38,8 @@ async def admin_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
         service = FileUploadService(StorageService(repo.client), repo, settings.max_file_size_bytes)
         title = document.file_name.rsplit(".", 1)[0]
         for subject in subjects:
-            service.save_pdf(content=content, filename=document.file_name, bucket=bucket, metadata={"kind": kind, "title": title, "description": "ملف شامل لجميع السنوات والأدوار", "branch_id": subject["branch_id"], "subject_id": subject["id"], "year_id": None, "round_id": None, "telegram_file_id": document.file_id})
+            service.save_file(content=content, filename=document.file_name, bucket=bucket, content_type=document.mime_type, metadata={"kind": kind, "title": title, "description": "ملف شامل لجميع السنوات والأدوار", "branch_id": subject["branch_id"], "subject_id": subject["id"], "year_id": None, "round_id": None, "telegram_file_id": document.file_id})
         await message.reply_text(f"تمت إضافة الملف بنجاح لمادة {subject_name} كملف شامل لجميع السنوات والأدوار.")
     except Exception:
-        logger.exception("Simple admin PDF upload failed")
+        logger.exception("Simple admin file upload failed")
         await message.reply_text("تعذر حفظ الملف. تحقق من سجلات Railway.")
