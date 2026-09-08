@@ -19,7 +19,7 @@ def main():
     app = Application.builder().token(settings.telegram_bot_token).post_init(post_init).post_shutdown(post_shutdown).build()
     app.bot_data["settings"] = settings; app.bot_data["repo"] = Repository(settings.supabase_url, settings.supabase_service_role_key)
     app.add_handler(CommandHandler("start", start)); app.add_handler(CommandHandler("admin", admin_command)); app.add_handler(CommandHandler("help", help_command)); app.add_handler(CommandHandler("search", search_command))
-    app.add_handler(CallbackQueryHandler(callback)); app.add_handler(MessageHandler(filters.Document.PDF, admin_document)); app.add_error_handler(on_error)
+    app.add_handler(CallbackQueryHandler(callback)); app.add_handler(MessageHandler(filters.Document.ALL, admin_document)); app.add_error_handler(on_error)
     app.run_polling(allowed_updates=["message", "callback_query"])
 
 if __name__ == "__main__": main()
