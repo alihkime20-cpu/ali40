@@ -24,8 +24,16 @@ async def _branches(kind, query, repo):
     await query.edit_message_text("اختر الفرع:", reply_markup=InlineKeyboardMarkup(buttons))
 
 async def _admin_section(query, section):
-    labels = {"manhaj":"📚 إدارة الملازم", "ministerial":"📝 إدارة الوزاريات", "subjects":"📖 إدارة المواد", "branches":"🎓 إدارة الفروع", "users":"👥 المستخدمون", "stats":"📊 الإحصائيات", "news":"📰 أخبار التربية"}
-    await query.edit_message_text(f"{labels.get(section, 'لوحة الإدارة')}\n\nتم فتح القسم بنجاح. اختر العملية المطلوبة.")
+    instructions = {
+        "manhaj": "📚 إدارة الملازم\n\nأرسل ملف PDF مع الوصف التالي:\nmanhaj|الفرع|المادة|السنة|الدور|اسم الملزمة|وصف مختصر",
+        "ministerial": "📝 إدارة الوزاريات\n\nأرسل ملف PDF مع الوصف التالي:\nministerial|الفرع|المادة|السنة|الدور|عنوان الأسئلة|وصف مختصر",
+        "subjects": "📖 إدارة المواد\n\nالمواد الأساسية مضافة من قاعدة البيانات، ويمكن توسيعها عبر migration مستقبلية.",
+        "branches": "🎓 إدارة الفروع\n\nالفروع الحالية: السادس العلمي والسادس الأدبي.",
+        "users": "👥 المستخدمون\n\nيتم تسجيل المستخدمين تلقائيًا عند استخدام /start.",
+        "stats": "📊 الإحصائيات\n\nيمكن متابعة أعداد الملفات والمستخدمين من قاعدة Supabase.",
+        "news": "📰 أخبار التربية\n\nالمزامنة تعمل تلقائيًا كل 30 دقيقة من القناة الرسمية.",
+    }
+    await query.edit_message_text(instructions.get(section, "لوحة الإدارة"))
 
 async def _show_news(query, repo):
     rows = repo.list_news(10)

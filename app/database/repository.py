@@ -20,10 +20,22 @@ class Repository:
         if not safe: return []
         return self.client.table("files").select("id,title,kind,file_path,telegram_file_id").ilike("title", f"%{safe}%").eq("is_active", True).limit(50).execute().data
     def add_file(self, values: dict): return self.client.table("files").insert(values).execute().data[0]
-    def upsert_news(self, rows: list[dict]) -> int:
-        if not rows: return 0
-        return len(self.client.table("education_news").upsert(rows, on_conflict="source_url").execute().data)
-    def list_news(self, limit: int = 10): return self.client.table("education_news").select("title,summary,source_url,published_at,source_name").eq("is_active", True).order("published_at", desc=True).limit(limit).execute().data
+    def find_branch(self, name: str): return self.client.table("branches").select("id").eq("name", name).limit(1).execute().data
+    def find_subject(self, branch_id: str, name: str): return self.client.table("subjects").select("id").eq("branch_id", branch_id).eq("name", name).limit(1).execute().data
+    def find_year(self, year: int): return self.client.table("academic_years").select("id").eq("year", year).limit(1).execute().data
+    def find_round(self, name: str): return self.client.table("rounds").select("id").eq("name", name).limit(1).execute().data
+    def upsert_news(self, rows: list[dict]) -> list[dict]:
+        if not rows: return []
+        urls = [r["source_url"] for r in rows]
+        existing = self.client.table("education_news").select("id,source_url").in_("source_url", urls).execute().data
+        known = {r["source_url"] for r in existing}
+        new_rows = [r for r in rows if r["source_url"] not in known]
+        if not new_rows: return []
+        return self.client.table("education_news").insert(new_rows).execute().data
+    def list_news(self, limit: int = 10): return self.client.table("education_news").select("id,title,summary,source_url,published_at,source_name").eq("is_active", True).order("published_at", desc=True).limit(limit).execute().data
+    def notification_users(self): return self.client.table("users").select("id,telegram_user_id").eq("is_blocked", False).eq("news_notifications", True).limit(10000).execute().data
+    def mark_news_delivered(self, news_id: str, user_id: str): return self.client.table("education_news_deliveries").upsert({"news_id": news_id, "user_id": user_id}, on_conflict="news_id,user_id").execute()
+    def set_news_notifications(self, telegram_user_id: int, enabled: bool): return self.client.table("users").update({"news_notifications": enabled}).eq("telegram_user_id", telegram_user_id).execute()
     def add_favorite(self, telegram_user_id: int, file_id: str):
         user = self.client.table("users").select("id").eq("telegram_user_id", telegram_user_id).single().execute().data
         return self.client.table("favorites").upsert({"user_id": user["id"], "file_id": file_id}, on_conflict="user_id,file_id").execute().data
