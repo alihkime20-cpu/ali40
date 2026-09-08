@@ -7,23 +7,39 @@ class Message:
     def __init__(self): self.sent = []
     async def reply_text(self, text, **kwargs): self.sent.append(text)
 
+class Query:
+    def __init__(self, data, user_id):
+        self.data, self.from_user, self.text = data, SimpleNamespace(id=user_id), ""
+    async def answer(self): pass
+    async def edit_message_text(self, text, **kwargs): self.text = text
+
+ADMIN = 7112435274
+
+def context(repo=None):
+    return SimpleNamespace(application=SimpleNamespace(bot_data={"settings": SimpleNamespace(admin_user_id=ADMIN), "repo": repo or SimpleNamespace()}))
+
 @pytest.mark.asyncio
 async def test_admin_command_rejects_regular_user():
     msg = Message(); update = SimpleNamespace(effective_user=SimpleNamespace(id=12), message=msg)
-    ctx = SimpleNamespace(application=SimpleNamespace(bot_data={"settings": SimpleNamespace(admin_user_id=7112435274)}))
-    await admin_command(update, ctx)
+    await admin_command(update, context())
     assert "فقط" in msg.sent[0]
 
 @pytest.mark.asyncio
-async def test_admin_callback_rejects_regular_user():
-    class Query:
-        data = "admin:stats"
-        async def answer(self): pass
-        async def edit_message_text(self, text, **kwargs): self.text = text
-    q = Query(); update = SimpleNamespace(callback_query=q, effective_user=SimpleNamespace(id=22))
-    ctx = SimpleNamespace(application=SimpleNamespace(bot_data={"settings": SimpleNamespace(admin_user_id=7112435274), "repo": SimpleNamespace()}))
-    await callback(update, ctx)
-    assert "صلاحية" in q.text
+@pytest.mark.parametrize("section", ["ministerial", "manhaj", "branches", "subjects", "stats", "users"])
+async def test_admin_can_open_every_panel_section(section):
+    query = Query(f"admin:{section}", ADMIN)
+    # effective_user intentionally differs: authorization must use query.from_user.id.
+    update = SimpleNamespace(callback_query=query, effective_user=SimpleNamespace(id=999))
+    await callback(update, context())
+    assert "تم فتح القسم بنجاح" in query.text
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("section", ["ministerial", "manhaj", "branches", "subjects", "stats", "users"])
+async def test_regular_user_cannot_open_admin_section_directly(section):
+    query = Query(f"admin:{section}", 12)
+    update = SimpleNamespace(callback_query=query, effective_user=SimpleNamespace(id=ADMIN))
+    await callback(update, context())
+    assert "ليس لديك صلاحية" in query.text
 
 @pytest.mark.asyncio
 async def test_search_empty_is_safe():

@@ -28,20 +28,32 @@ async def _branches(kind: str, query, repo):
     buttons = [[InlineKeyboardButton(row["name"], callback_data=f"branch:{kind}:{row['id']}")] for row in repo.list_branches()]
     await query.edit_message_text("اختر الفرع:", reply_markup=InlineKeyboardMarkup(buttons))
 
+async def _admin_section(query, section: str):
+    labels = {
+        "manhaj": "📚 إدارة الملازم",
+        "ministerial": "📝 إدارة الوزاريات",
+        "subjects": "📖 إدارة المواد",
+        "branches": "🎓 إدارة الفروع",
+        "users": "👥 المستخدمون",
+        "stats": "📊 الإحصائيات",
+    }
+    await query.edit_message_text(f"{labels.get(section, 'لوحة الإدارة')}\n\nتم فتح القسم بنجاح. اختر العملية المطلوبة.")
+
 async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     repo, settings = context.application.bot_data["repo"], context.application.bot_data["settings"]
     data = query.data
-    if data.startswith("admin:") and not is_admin(update.effective_user, settings.admin_user_id):
+    # CallbackQuery.from_user هو مصدر الهوية الموثوق للضغط على الزر.
+    if data.startswith("admin:") and query.from_user.id != settings.admin_user_id:
         await query.edit_message_text("عذرًا، ليس لديك صلاحية تنفيذ هذه العملية.")
         return
     if data == "about":
         await query.edit_message_text("🎓 مساعد السادس العراقي\nبوت لتنظيم الملازم والأسئلة الوزارية.")
     elif data.startswith("admin:"):
-        await query.edit_message_text("هذه الوحدة الإدارية محمية وتستقبل عمليات المدير فقط.")
+        await _admin_section(query, data.split(":", 1)[1])
     elif data == "favorites":
-        rows = repo.list_favorites(update.effective_user.id)
+        rows = repo.list_favorites(query.from_user.id)
         text = "⭐ المفضلة\n\n" + ("\n".join(f"• {r.get('files', {}).get('title', 'ملف')}" for r in rows) if rows else "لا توجد مفضلات بعد.")
         await query.edit_message_text(text)
     elif data == "search":
@@ -65,7 +77,7 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data.startswith("file:"):
         row = repo.get_file(data.split(":", 1)[1])
         if row and row.get("telegram_file_id"):
-            await context.bot.send_document(update.effective_user.id, row["telegram_file_id"])
+            await context.bot.send_document(query.from_user.id, row["telegram_file_id"])
         else:
             await query.edit_message_text("الملف متاح، وسيتم إرسال رابط آمن عند تفعيل التخزين.")
     else:
