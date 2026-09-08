@@ -10,10 +10,13 @@ def is_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool: return
 def admin_markup() -> InlineKeyboardMarkup: return InlineKeyboardMarkup([[InlineKeyboardButton("📊 الإحصائيات", callback_data="admin_stats"), InlineKeyboardButton("📢 القناة", callback_data="admin_channel")], [InlineKeyboardButton("📣 إذاعة", callback_data="admin_broadcast"), InlineKeyboardButton("ℹ️ التعليمات", callback_data="admin_help")]])
 def stats_text(context: ContextTypes.DEFAULT_TYPE) -> str:
     stats = context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0})
-    return f"📊 لوحة تحكم البوت\n\n👥 المستخدمون: {len(stats['users'])}\n⬇️ التنزيلات الناجحة: {stats['downloads']}\n⚠️ الأخطاء: {stats['errors']}"
+    store = context.application.bot_data.get("user_store")
+    user_count = len(store.ids()) if store else len(stats["users"])
+    return f"📊 لوحة تحكم البوت\n\n👥 المستخدمون: {user_count}\n⬇️ التنزيلات الناجحة: {stats['downloads']}\n⚠️ الأخطاء: {stats['errors']}"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0})["users"].add(update.effective_user.id)
+    store = context.application.bot_data.get("user_store")
+    if store: store.upsert(update.effective_user)
     if not await require_subscription(update, context): return
     await update.message.reply_text("🎬 بوت تحميل الفيديوهات\n\nأرسل رابط فيديو من TikTok أو Instagram وسأعيده لك.")
 
@@ -34,7 +37,8 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def _broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.application.bot_data["broadcast_mode"] = False
-    users = context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0})["users"]
+    store = context.application.bot_data.get("user_store")
+    users = store.ids() if store else context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0})["users"]
     sent = failed = 0
     for user_id in users:
         if user_id == update.effective_user.id: continue
@@ -45,7 +49,9 @@ async def _broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if is_owner(update, context) and context.application.bot_data.get("broadcast_mode"):
         await _broadcast(update, context); return
-    stats = context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0}); stats["users"].add(update.effective_user.id)
+    store = context.application.bot_data.get("user_store")
+    if store: store.upsert(update.effective_user)
+    stats = context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0})
     if not await require_subscription(update, context): return
     url = extract_url(update.message.text or "")
     if not url: await update.message.reply_text("أرسل رابط TikTok أو Instagram صالحًا."); return

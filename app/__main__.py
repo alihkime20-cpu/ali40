@@ -1,6 +1,7 @@
 import logging
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, MessageHandler, filters
 from app.config.settings import get_settings
+from app.services.users import UserStore
 from app.handlers.core import admin_callback, admin_command, handle_message, help_command, on_error, start
 
 def main():
@@ -8,6 +9,7 @@ def main():
     logging.basicConfig(level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     app = Application.builder().token(settings.telegram_bot_token).build()
     app.bot_data["settings"] = settings
+    app.bot_data["user_store"] = UserStore(settings.supabase_url, settings.supabase_service_role_key)
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("admin", admin_command))
     app.add_handler(CommandHandler("help", help_command))
