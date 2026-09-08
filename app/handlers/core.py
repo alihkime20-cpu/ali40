@@ -2,20 +2,19 @@ import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 from app.keyboards.menus import admin_menu, student_menu
+from app.services.news import sync_news
 from app.utils.security import is_admin
 
 logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    repo, settings = context.application.bot_data["repo"], context.application.bot_data["settings"]
+    user = update.effective_user; repo, settings = context.application.bot_data["repo"], context.application.bot_data["settings"]
     repo.upsert_user(user.id, user.username, user.first_name, user.last_name)
     if is_admin(user, settings.admin_user_id): await update.message.reply_text("🔐 لوحة الإدارة\n\nاختر العملية المطلوبة:", reply_markup=admin_menu())
     else: await update.message.reply_text("🎓 مساعد السادس العراقي\n\nاختر ما تريد:", reply_markup=student_menu())
 
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not is_admin(update.effective_user, context.application.bot_data["settings"].admin_user_id):
-        await update.message.reply_text("عذرًا، هذا الأمر متاح للمدير فقط."); return
+    if not is_admin(update.effective_user, context.application.bot_data["settings"].admin_user_id): await update.message.reply_text("عذرًا، هذا الأمر متاح للمدير فقط."); return
     await update.message.reply_text("🔐 لوحة الإدارة", reply_markup=admin_menu())
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE): await update.message.reply_text("استخدم /start للقائمة الرئيسية أو /search كلمة للبحث.")
@@ -25,16 +24,24 @@ async def _branches(kind, query, repo):
     await query.edit_message_text("اختر الفرع:", reply_markup=InlineKeyboardMarkup(buttons))
 
 async def _admin_section(query, section):
-    labels = {"manhaj":"📚 إدارة الملازم", "ministerial":"📝 إدارة الوزاريات", "subjects":"📖 إدارة المواد", "branches":"🎓 إدارة الفروع", "users":"👥 المستخدمون", "stats":"📊 الإحصائيات"}
+    labels = {"manhaj":"📚 إدارة الملازم", "ministerial":"📝 إدارة الوزاريات", "subjects":"📖 إدارة المواد", "branches":"🎓 إدارة الفروع", "users":"👥 المستخدمون", "stats":"📊 الإحصائيات", "news":"📰 أخبار التربية"}
     await query.edit_message_text(f"{labels.get(section, 'لوحة الإدارة')}\n\nتم فتح القسم بنجاح. اختر العملية المطلوبة.")
+
+async def _show_news(query, repo):
+    rows = repo.list_news(10)
+    if not rows: await query.edit_message_text("لا توجد أخبار منشورة حاليًا."); return
+    text = "📰 أخبار التربية\n\n" + "\n\n".join(f"• {r['title']}\n{r.get('source_url', '')}" for r in rows)
+    await query.edit_message_text(text[:3900])
 
 async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query; await query.answer()
     repo, settings, data = context.application.bot_data["repo"], context.application.bot_data["settings"], query.data
-    if data.startswith("admin:") and query.from_user.id != settings.admin_user_id:
-        await query.edit_message_text("عذرًا، ليس لديك صلاحية تنفيذ هذه العملية."); return
-    if data == "about": await query.edit_message_text("🎓 مساعد السادس العراقي\nبوت لتنظيم الملازم والأسئلة الوزارية.")
-    elif data.startswith("admin:"): await _admin_section(query, data.split(":", 1)[1])
+    if data.startswith("admin:") and query.from_user.id != settings.admin_user_id: await query.edit_message_text("عذرًا، ليس لديك صلاحية تنفيذ هذه العملية."); return
+    if data == "about": await query.edit_message_text("🎓 مساعد السادس العراقي\nبوت لتنظيم الملازم والأسئلة الوزارية وأخبار وزارة التربية.")
+    elif data.startswith("admin:"):
+        if data == "admin:news": await query.edit_message_text(f"📰 تمت مزامنة {sync_news(repo)} خبر من المصدر الرسمي.")
+        else: await _admin_section(query, data.split(":", 1)[1])
+    elif data == "news": await _show_news(query, repo)
     elif data == "favorites":
         rows = repo.list_favorites(query.from_user.id); text = "⭐ المفضلة\n\n" + ("\n".join(f"• {r.get('files', {}).get('title', 'ملف')}" for r in rows) if rows else "لا توجد مفضلات بعد."); await query.edit_message_text(text)
     elif data == "search": await query.edit_message_text("استخدم الأمر /search ثم اكتب عنوان الملف.")
