@@ -5,6 +5,7 @@ class Repository:
     def upsert_user(self, telegram_user_id: int, username: str | None, first_name: str | None, last_name: str | None): return self.client.table("users").upsert({"telegram_user_id": telegram_user_id, "username": username, "first_name": first_name, "last_name": last_name}, on_conflict="telegram_user_id").execute().data[0]
     def list_branches(self): return self.client.table("branches").select("id,name").eq("is_active", True).order("name").execute().data
     def list_subjects(self, branch_id: str): return self.client.table("subjects").select("id,name").eq("branch_id", branch_id).eq("is_active", True).order("name").execute().data
+    def list_all_subjects(self): return self.client.table("subjects").select("id,name,branch_id").eq("is_active", True).order("name").limit(100).execute().data
     def list_years(self): return self.client.table("academic_years").select("id,year").order("year", desc=True).execute().data
     def list_rounds(self): return self.client.table("rounds").select("id,name").order("id").execute().data
     def list_files(self, kind: str, branch_id: str, subject_id: str, year_id: str | None = None, round_id: str | None = None):
@@ -40,17 +41,8 @@ class Repository:
         def count(table: str, active_only: bool = False):
             query = self.client.table(table).select("id", count="exact", head=True)
             if active_only: query = query.eq("is_active", True)
-            result = query.execute()
-            return result.count or 0
-        return {
-            "users": count("users"),
-            "branches": count("branches", True),
-            "subjects": count("subjects", True),
-            "files": count("files", True),
-            "manhaj": self.client.table("files").select("id", count="exact", head=True).eq("kind", "manhaj").eq("is_active", True).execute().count or 0,
-            "ministerial": self.client.table("files").select("id", count="exact", head=True).eq("kind", "ministerial").eq("is_active", True).execute().count or 0,
-            "news": count("education_news", True),
-        }
+            result = query.execute(); return result.count or 0
+        return {"users": count("users"), "branches": count("branches", True), "subjects": count("subjects", True), "files": count("files", True), "manhaj": self.client.table("files").select("id", count="exact", head=True).eq("kind", "manhaj").eq("is_active", True).execute().count or 0, "ministerial": self.client.table("files").select("id", count="exact", head=True).eq("kind", "ministerial").eq("is_active", True).execute().count or 0, "news": count("education_news", True)}
     def notification_users(self): return self.client.table("users").select("id,telegram_user_id").eq("is_blocked", False).eq("news_notifications", True).limit(10000).execute().data
     def mark_news_delivered(self, news_id: str, user_id: str): return self.client.table("education_news_deliveries").upsert({"news_id": news_id, "user_id": user_id}, on_conflict="news_id,user_id").execute()
     def set_news_notifications(self, telegram_user_id: int, enabled: bool): return self.client.table("users").update({"news_notifications": enabled}).eq("telegram_user_id", telegram_user_id).execute()
