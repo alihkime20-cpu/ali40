@@ -14,6 +14,6 @@ def main():
     app.add_handler(CallbackQueryHandler(admin_callback, pattern="^admin_(stats|channel|help)$"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(on_error)
-    app.run_polling(allowed_updates=["message"])
+    app.run_polling(allowed_updates=["message", "callback_query"])
 
 if __name__ == "__main__": main()
