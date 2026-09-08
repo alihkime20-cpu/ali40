@@ -12,6 +12,7 @@ class Repository:
         if year_id: query = query.eq("year_id", year_id)
         if round_id: query = query.eq("round_id", round_id)
         return query.order("title").limit(50).execute().data
+    def list_all_files(self, kind: str, limit: int = 50): return self.client.table("files").select("id,title,description,file_path,telegram_file_id,file_size").eq("kind", kind).eq("is_active", True).order("created_at", desc=True).limit(limit).execute().data
     def get_file(self, file_id: str):
         rows = self.client.table("files").select("id,title,kind,file_path,telegram_file_id").eq("id", file_id).eq("is_active", True).limit(1).execute().data
         return rows[0] if rows else None
@@ -26,14 +27,11 @@ class Repository:
     def find_round(self, name: str): return self.client.table("rounds").select("id").eq("name", name).limit(1).execute().data
     def upsert_news(self, rows: list[dict]) -> list[dict]:
         if not rows: return []
-        urls = [r["source_url"] for r in rows]
-        existing = self.client.table("education_news").select("id,source_url").in_("source_url", urls).execute().data
-        known = {r["source_url"] for r in existing}
-        new_rows = [r for r in rows if r["source_url"] not in known]
+        urls = [r["source_url"] for r in rows]; existing = self.client.table("education_news").select("id,source_url").in_("source_url", urls).execute().data; known = {r["source_url"] for r in existing}; new_rows = [r for r in rows if r["source_url"] not in known]
         if not new_rows: return []
         return self.client.table("education_news").insert(new_rows).execute().data
     def list_news(self, limit: int = 10): return self.client.table("education_news").select("id,title,summary,source_url,published_at,source_name").eq("is_active", True).order("published_at", desc=True).limit(limit).execute().data
-    def list_external_resources(self, category: str, branch_id: str | None = None, limit: int = 20):
+    def list_external_resources(self, category: str, branch_id: str | None = None, limit: int = 50):
         query = self.client.table("external_resources").select("title,description,url,source_name,year,round").eq("category", category).eq("is_active", True)
         if branch_id: query = query.eq("branch_id", branch_id)
         return query.order("year", desc=True).limit(limit).execute().data

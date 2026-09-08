@@ -35,6 +35,15 @@ async def _admin_section(query, section):
     }
     await query.edit_message_text(instructions.get(section, "لوحة الإدارة"))
 
+async def _admin_content(query, repo, kind: str):
+    rows = repo.list_all_files(kind) if hasattr(repo, "list_all_files") else []
+    title = "📚 الملازم" if kind == "manhaj" else "📝 الأسئلة الوزارية"
+    if not rows:
+        await query.edit_message_text(f"{title}\n\nلا توجد ملفات مرفوعة بعد.\n\nأرسل PDF للمدير مع الوصف المطلوب لإضافته.")
+        return
+    buttons = [[InlineKeyboardButton(row["title"], callback_data=f"file:{row['id']}")] for row in rows]
+    await query.edit_message_text(f"{title}\n\nالملفات المضافة:", reply_markup=InlineKeyboardMarkup(buttons))
+
 async def _show_news(query, repo):
     rows = repo.list_news(10)
     if not rows: await query.edit_message_text("لا توجد أخبار منشورة حاليًا."); return
@@ -56,7 +65,9 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data.startswith("admin:") and query.from_user.id != settings.admin_user_id: await query.edit_message_text("عذرًا، ليس لديك صلاحية تنفيذ هذه العملية."); return
     if data == "about": await query.edit_message_text("🎓 مساعد السادس العراقي\nبوت لتنظيم الملازم والأسئلة الوزارية وأخبار وزارة التربية.")
     elif data.startswith("admin:"):
-        if data == "admin:news": await query.edit_message_text(f"📰 تمت مزامنة {sync_news(repo)} خبر من المصدر الرسمي.")
+        if data == "admin:news": await query.edit_message_text(f"📰 تمت مزامنة {len(sync_news(repo))} خبر من المصدر الرسمي.")
+        elif data == "admin:manhaj": await _admin_content(query, repo, "manhaj")
+        elif data == "admin:ministerial": await _admin_content(query, repo, "ministerial")
         else: await _admin_section(query, data.split(":", 1)[1])
     elif data == "news": await _show_news(query, repo)
     elif data in ("links:resource", "links:ministerial"): await _show_external_resources(query, repo, data.split(":", 1)[1])
