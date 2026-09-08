@@ -17,7 +17,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     status = await update.message.reply_text("⏳ جارٍ تنزيل الفيديو...")
     path = None
     try:
-        path, title = await download(url, settings.max_file_size_bytes, settings.download_timeout_seconds)
+        path, title, thumbnail = await download(url, settings.max_file_size_bytes, settings.download_timeout_seconds)
+        if thumbnail:
+            with open(thumbnail, "rb") as image:
+                await update.message.reply_photo(photo=image, caption=f"🎬 {title[:900]}")
         with open(path, "rb") as video:
             await update.message.reply_video(video=video, caption=f"🎬 {title[:900]}", supports_streaming=True)
         await status.delete()
