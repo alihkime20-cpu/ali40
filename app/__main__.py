@@ -2,7 +2,7 @@ import logging
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler
 from app.config.settings import get_settings
 from app.database.repository import Repository
-from app.handlers.core import admin_command, callback, help_command, search_command, start
+from app.handlers.core import admin_command, callback, help_command, on_error, search_command, start
 
 def main():
     settings = get_settings()
@@ -15,6 +15,8 @@ def main():
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("search", search_command))
     app.add_handler(CallbackQueryHandler(callback))
+    app.add_error_handler(on_error)
     app.run_polling(allowed_updates=["message", "callback_query"])
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    main()

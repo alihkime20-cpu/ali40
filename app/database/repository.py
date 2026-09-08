@@ -16,9 +16,18 @@ class Repository:
     def list_files(self, kind: str, branch_id: str, subject_id: str):
         return self.client.table("files").select("id,title,description,file_path,telegram_file_id,file_size").eq("kind", kind).eq("branch_id", branch_id).eq("subject_id", subject_id).eq("is_active", True).order("title").limit(50).execute().data
 
+    def get_file(self, file_id: str):
+        rows = self.client.table("files").select("id,title,kind,file_path,telegram_file_id").eq("id", file_id).eq("is_active", True).limit(1).execute().data
+        return rows[0] if rows else None
+
     def search(self, term: str):
         safe = term.strip().replace("%", "")[:80]
-        return self.client.table("files").select("id,title,kind,file_path,telegram_file_id").ilike("title", f"%{safe}%").eq("is_active", True).limit(20).execute().data
+        if not safe:
+            return []
+        return self.client.table("files").select("id,title,kind,file_path,telegram_file_id").ilike("title", f"%{safe}%").eq("is_active", True).limit(50).execute().data
+
+    def add_file(self, values: dict):
+        return self.client.table("files").insert(values).execute().data[0]
 
     def add_favorite(self, telegram_user_id: int, file_id: str):
         user = self.client.table("users").select("id").eq("telegram_user_id", telegram_user_id).single().execute().data

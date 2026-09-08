@@ -36,3 +36,11 @@ create index if not exists files_branch_subject_idx on files(branch_id,subject_i
 create index if not exists favorites_user_idx on favorites(user_id);
 insert into branches(name) values ('السادس العلمي'), ('السادس الأدبي') on conflict (name) do nothing;
 insert into rounds(name) values ('الدور الأول'), ('الدور الثاني'), ('الدور الثالث') on conflict (name) do nothing;
+insert into storage.buckets (id,name,public) values ('manhaj-files','manhaj-files',false), ('ministerial-files','ministerial-files',false) on conflict (id) do nothing;
+alter table public.users enable row level security;
+alter table public.branches enable row level security;
+alter table public.subjects enable row level security;
+alter table public.academic_years enable row level security;
+alter table public.rounds enable row level security;
+alter table public.files enable row level security;
+alter table public.favorites enable row level security;
