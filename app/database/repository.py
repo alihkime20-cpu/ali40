@@ -23,6 +23,7 @@ class Repository:
     def add_file(self, values: dict): return self.client.table("files").insert(values).execute().data[0]
     def find_branch(self, name: str): return self.client.table("branches").select("id").eq("name", name).limit(1).execute().data
     def find_subject(self, branch_id: str, name: str): return self.client.table("subjects").select("id").eq("branch_id", branch_id).eq("name", name).limit(1).execute().data
+    def find_subjects_all_branches(self, name: str): return self.client.table("subjects").select("id,name,branch_id").eq("name", name).eq("is_active", True).limit(10).execute().data
     def find_year(self, year: int): return self.client.table("academic_years").select("id").eq("year", year).limit(1).execute().data
     def find_round(self, name: str): return self.client.table("rounds").select("id").eq("name", name).limit(1).execute().data
     def upsert_news(self, rows: list[dict]) -> list[dict]:
