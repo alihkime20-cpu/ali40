@@ -38,11 +38,18 @@ async def _admin_section(query, section):
 async def _admin_content(query, repo, kind: str):
     rows = repo.list_all_files(kind) if hasattr(repo, "list_all_files") else []
     title = "📚 الملازم" if kind == "manhaj" else "📝 الأسئلة الوزارية"
-    if not rows:
-        await query.edit_message_text(f"{title}\n\nلا توجد ملفات مرفوعة بعد.\n\nأرسل PDF للمدير مع الوصف المطلوب لإضافته.")
-        return
+    external_category = "resource" if kind == "manhaj" else "ministerial"
+    links = repo.list_external_resources(external_category) if hasattr(repo, "list_external_resources") else []
     buttons = [[InlineKeyboardButton(row["title"], callback_data=f"file:{row['id']}")] for row in rows]
-    await query.edit_message_text(f"{title}\n\nالملفات المضافة:", reply_markup=InlineKeyboardMarkup(buttons))
+    buttons += [[InlineKeyboardButton(f"🔗 {link['title']}", url=link["url"])] for link in links]
+    if not buttons:
+        await query.edit_message_text(f"{title}\n\nلا توجد ملفات أو روابط مضافة بعد.\n\nأرسل PDF للمدير مع الوصف المطلوب لإضافته.")
+        return
+    text = f"{title}\n\n"
+    if rows: text += f"📄 الملفات المرفوعة: {len(rows)}\n"
+    if links: text += f"🔗 الروابط الخارجية: {len(links)}\n"
+    text += "\nاختر المحتوى لفتحه:"
+    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(buttons))
 
 async def _show_news(query, repo):
     rows = repo.list_news(10)
