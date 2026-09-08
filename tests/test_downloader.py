@@ -10,5 +10,11 @@ def test_rejects_unsupported_host():
 def test_accepts_instagram():
     validate_url("https://www.instagram.com/reel/ABC123/")
 
+def test_accepts_short_tiktok_link():
+    validate_url("https://vm.tiktok.com/ZM123/")
+
+def test_accepts_instagram_subdomain():
+    validate_url("https://m.instagram.com/reel/ABC123/")
+
 def test_extract_url_without_link():
     assert extract_url("لا يوجد رابط") is None

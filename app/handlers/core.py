@@ -6,7 +6,7 @@ from app.services.downloader import DownloadError, cleanup, download, extract_ur
 logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🎬 بوت تحميل الفيديوهات\n\nأرسل رابط فيديو عام من TikTok أو Instagram وسأعيده لك بدون حفظ دائم.")
+    await update.message.reply_text("🎬 بوت تحميل الفيديوهات\n\nأرسل رابط فيديو من TikTok أو Instagram وسأعيده لك.")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text or ""
@@ -30,7 +30,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if path: cleanup(path)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("أرسل رابطًا عامًا من TikTok أو Instagram فقط. لا يتم حفظ الفيديو بعد إرساله.")
+    await update.message.reply_text("أرسل رابطًا من TikTok أو Instagram فقط.")
 
 async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.exception("Unhandled bot error", exc_info=context.error)

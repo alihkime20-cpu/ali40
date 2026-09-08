@@ -6,7 +6,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 import yt_dlp
 
-SUPPORTED_HOSTS = {"tiktok.com", "www.tiktok.com", "vm.tiktok.com", "instagram.com", "www.instagram.com", "instagr.am"}
+SUPPORTED_ROOTS = ("tiktok.com", "instagram.com", "instagr.am")
 URL_RE = re.compile(r"https?://[^\s<>]+", re.I)
 
 class DownloadError(Exception): pass
@@ -17,7 +17,8 @@ def extract_url(text: str) -> str | None:
 
 def validate_url(url: str) -> None:
     parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"} or parsed.hostname not in SUPPORTED_HOSTS:
+    hostname = (parsed.hostname or "").lower().rstrip(".")
+    if parsed.scheme not in {"http", "https"} or not any(hostname == root or hostname.endswith("." + root) for root in SUPPORTED_ROOTS):
         raise DownloadError("أرسل رابطًا عامًا من TikTok أو Instagram فقط.")
 
 def _download(url: str, max_bytes: int, timeout: int) -> tuple[str, str]:
