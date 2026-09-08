@@ -13,8 +13,17 @@ class Repository:
     def list_subjects(self, branch_id: str):
         return self.client.table("subjects").select("id,name").eq("branch_id", branch_id).eq("is_active", True).order("name").execute().data
 
-    def list_files(self, kind: str, branch_id: str, subject_id: str):
-        return self.client.table("files").select("id,title,description,file_path,telegram_file_id,file_size").eq("kind", kind).eq("branch_id", branch_id).eq("subject_id", subject_id).eq("is_active", True).order("title").limit(50).execute().data
+    def list_years(self):
+        return self.client.table("academic_years").select("id,year").order("year", desc=True).execute().data
+
+    def list_rounds(self):
+        return self.client.table("rounds").select("id,name").order("id").execute().data
+
+    def list_files(self, kind: str, branch_id: str, subject_id: str, year_id: str | None = None, round_id: str | None = None):
+        query = self.client.table("files").select("id,title,description,file_path,telegram_file_id,file_size,year_id,round_id").eq("kind", kind).eq("branch_id", branch_id).eq("subject_id", subject_id).eq("is_active", True)
+        if year_id: query = query.eq("year_id", year_id)
+        if round_id: query = query.eq("round_id", round_id)
+        return query.order("title").limit(50).execute().data
 
     def get_file(self, file_id: str):
         rows = self.client.table("files").select("id,title,kind,file_path,telegram_file_id").eq("id", file_id).eq("is_active", True).limit(1).execute().data
@@ -22,12 +31,10 @@ class Repository:
 
     def search(self, term: str):
         safe = term.strip().replace("%", "")[:80]
-        if not safe:
-            return []
+        if not safe: return []
         return self.client.table("files").select("id,title,kind,file_path,telegram_file_id").ilike("title", f"%{safe}%").eq("is_active", True).limit(50).execute().data
 
-    def add_file(self, values: dict):
-        return self.client.table("files").insert(values).execute().data[0]
+    def add_file(self, values: dict): return self.client.table("files").insert(values).execute().data[0]
 
     def add_favorite(self, telegram_user_id: int, file_id: str):
         user = self.client.table("users").select("id").eq("telegram_user_id", telegram_user_id).single().execute().data
