@@ -17,7 +17,6 @@ async def require_subscription(update: Update, context: ContextTypes.DEFAULT_TYP
     settings = context.application.bot_data["settings"]
     markup = InlineKeyboardMarkup([
         [InlineKeyboardButton("📢 اشترك في القناة", url=settings.required_channel_url)],
-        [InlineKeyboardButton("✅ تحقق من الاشتراك", callback_data="check_subscription")],
     ])
     message = update.effective_message
     if message: await message.reply_text("🔒 يجب الاشتراك في قناتنا أولًا لاستخدام البوت.", reply_markup=markup)

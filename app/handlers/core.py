@@ -1,7 +1,7 @@
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes
-from app.handlers.subscription import is_subscribed, require_subscription
+from app.handlers.subscription import require_subscription
 from app.services.downloader import DownloadError, cleanup, download, extract_url
 
 logger = logging.getLogger(__name__)
@@ -27,11 +27,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.exception("Video delivery failed"); await status.edit_text("❌ تعذر إرسال الفيديو. قد يكون حجمه أكبر من حد Telegram.")
     finally:
         if path: cleanup(path)
-
-async def check_subscription_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query; await query.answer()
-    if await is_subscribed(query.from_user.id, context): await query.edit_message_text("✅ تم التحقق من اشتراكك. أرسل رابط الفيديو الآن.")
-    else: await query.answer("لم يظهر اشتراكك بعد. اشترك ثم اضغط التحقق.", show_alert=True)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await require_subscription(update, context): return
