@@ -23,31 +23,35 @@ async def _branches(kind, query, repo):
     buttons = [[InlineKeyboardButton(r["name"], callback_data=f"branch:{kind}:{r['id']}")] for r in repo.list_branches()]
     await query.edit_message_text("اختر الفرع:", reply_markup=InlineKeyboardMarkup(buttons))
 
-async def _admin_section(query, section):
+async def _admin_section(query, section, repo):
     instructions = {
         "manhaj": "📚 إدارة الملازم\n\nأرسل ملف PDF مع الوصف التالي:\nmanhaj|الفرع|المادة|السنة|الدور|اسم الملزمة|وصف مختصر",
         "ministerial": "📝 إدارة الوزاريات\n\nأرسل ملف PDF مع الوصف التالي:\nministerial|الفرع|المادة|السنة|الدور|عنوان الأسئلة|وصف مختصر",
         "subjects": "📖 إدارة المواد\n\nالمواد الأساسية مضافة من قاعدة البيانات، ويمكن توسيعها عبر migration مستقبلية.",
         "branches": "🎓 إدارة الفروع\n\nالفروع الحالية: السادس العلمي والسادس الأدبي.",
         "users": "👥 المستخدمون\n\nيتم تسجيل المستخدمين تلقائيًا عند استخدام /start.",
-        "stats": "📊 الإحصائيات\n\nيمكن متابعة أعداد الملفات والمستخدمين من قاعدة Supabase.",
+        "stats": "📊 الإحصائيات",
         "news": "📰 أخبار التربية\n\nالمزامنة تعمل تلقائيًا كل 30 دقيقة من القناة الرسمية.",
     }
+    if section == "stats":
+        stats = repo.statistics() if hasattr(repo, "statistics") else {"users": 0, "branches": 0, "subjects": 0, "files": 0, "manhaj": 0, "ministerial": 0, "news": 0}
+        await query.edit_message_text("📊 إحصائيات البوت\n\n" + "\n".join([
+            f"👥 المستخدمون: {stats['users']}", f"🎓 الفروع: {stats['branches']}",
+            f"📖 المواد: {stats['subjects']}", f"📄 إجمالي الملفات: {stats['files']}",
+            f"📚 الملازم: {stats['manhaj']}", f"📝 الوزاريات: {stats['ministerial']}",
+            f"📰 الأخبار: {stats['news']}" ]))
+        return
     await query.edit_message_text(instructions.get(section, "لوحة الإدارة"))
 
 async def _admin_content(query, repo, kind: str):
     rows = repo.list_all_files(kind) if hasattr(repo, "list_all_files") else []
     title = "📚 الملازم" if kind == "manhaj" else "📝 الأسئلة الوزارية"
-    external_category = "resource" if kind == "manhaj" else "ministerial"
-    links = repo.list_external_resources(external_category) if hasattr(repo, "list_external_resources") else []
     buttons = [[InlineKeyboardButton(row["title"], callback_data=f"file:{row['id']}")] for row in rows]
-    buttons += [[InlineKeyboardButton(f"🔗 {link['title']}", url=link["url"])] for link in links]
     if not buttons:
-        await query.edit_message_text(f"{title}\n\nلا توجد ملفات أو روابط مضافة بعد.\n\nأرسل PDF للمدير مع الوصف المطلوب لإضافته.")
+        await query.edit_message_text(f"{title}\n\nلا توجد ملفات مرفوعة بعد.\n\nأرسل PDF للمدير مع الوصف المطلوب لإضافته.")
         return
     text = f"{title}\n\n"
     if rows: text += f"📄 الملفات المرفوعة: {len(rows)}\n"
-    if links: text += f"🔗 الروابط الخارجية: {len(links)}\n"
     text += "\nاختر المحتوى لفتحه:"
     await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(buttons))
 
@@ -75,7 +79,8 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if data == "admin:news": await query.edit_message_text(f"📰 تمت مزامنة {len(sync_news(repo))} خبر من المصدر الرسمي.")
         elif data == "admin:manhaj": await _admin_content(query, repo, "manhaj")
         elif data == "admin:ministerial": await _admin_content(query, repo, "ministerial")
-        else: await _admin_section(query, data.split(":", 1)[1])
+        else:
+            await _admin_section(query, data.split(":", 1)[1], repo)
     elif data == "news": await _show_news(query, repo)
     elif data in ("links:resource", "links:ministerial"): await _show_external_resources(query, repo, data.split(":", 1)[1])
     elif data == "favorites":
