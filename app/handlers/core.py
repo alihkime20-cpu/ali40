@@ -7,7 +7,7 @@ from app.services.downloader import DownloadError, cleanup, download, extract_ur
 logger = logging.getLogger(__name__)
 
 def is_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool: return bool(update.effective_user and update.effective_user.id == context.application.bot_data["settings"].admin_user_id)
-def admin_markup() -> InlineKeyboardMarkup: return InlineKeyboardMarkup([[InlineKeyboardButton("📊 الإحصائيات", callback_data="admin_stats"), InlineKeyboardButton("📢 القناة", callback_data="admin_channel")], [InlineKeyboardButton("📣 إذاعة", callback_data="admin_broadcast"), InlineKeyboardButton("ℹ️ التعليمات", callback_data="admin_help")]])
+def admin_markup() -> InlineKeyboardMarkup: return InlineKeyboardMarkup([[InlineKeyboardButton("📊 الإحصائيات", callback_data="admin_stats"), InlineKeyboardButton("🔄 تحديث", callback_data="admin_refresh")], [InlineKeyboardButton("📢 القناة", callback_data="admin_channel"), InlineKeyboardButton("📣 إذاعة", callback_data="admin_broadcast")], [InlineKeyboardButton("ℹ️ التعليمات", callback_data="admin_help")]])
 def stats_text(context: ContextTypes.DEFAULT_TYPE) -> str:
     stats = context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0})
     store = context.application.bot_data.get("user_store")
@@ -28,7 +28,7 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     if not is_owner(update, context): await query.answer("غير مصرح لك.", show_alert=True); return
     await query.answer(); settings = context.application.bot_data["settings"]
-    if query.data == "admin_stats": await query.edit_message_text(stats_text(context), reply_markup=admin_markup())
+    if query.data in {"admin_stats", "admin_refresh"}: await query.edit_message_text(stats_text(context), reply_markup=admin_markup())
     elif query.data == "admin_channel": await query.edit_message_text(f"📢 القناة الإلزامية\n\n{settings.required_channel_url}\n\nالمالك مستثنى بالمعرف: {settings.admin_user_id}", reply_markup=admin_markup())
     elif query.data == "admin_broadcast":
         context.application.bot_data["broadcast_mode"] = True

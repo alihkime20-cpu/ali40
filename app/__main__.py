@@ -13,7 +13,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("admin", admin_command))
     app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CallbackQueryHandler(admin_callback, pattern="^admin_(stats|channel|broadcast|help)$"))
+    app.add_handler(CallbackQueryHandler(admin_callback, pattern="^admin_(stats|refresh|channel|broadcast|help)$"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(on_error)
     app.run_polling(allowed_updates=["message", "callback_query"])
