@@ -11,12 +11,15 @@ def admin_markup() -> InlineKeyboardMarkup: return InlineKeyboardMarkup([[Inline
 def stats_text(context: ContextTypes.DEFAULT_TYPE) -> str:
     stats = context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0})
     store = context.application.bot_data.get("user_store")
-    user_count = len(store.ids()) if store else len(stats["users"])
+    try: user_count = len(store.ids()) if store else len(stats["users"])
+    except Exception: logger.exception("Could not read users from Supabase"); user_count = len(stats["users"])
     return f"📊 لوحة تحكم البوت\n\n👥 المستخدمون: {user_count}\n⬇️ التنزيلات الناجحة: {stats['downloads']}\n⚠️ الأخطاء: {stats['errors']}"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     store = context.application.bot_data.get("user_store")
-    if store: store.upsert(update.effective_user)
+    if store:
+        try: store.upsert(update.effective_user)
+        except Exception: logger.exception("Could not save Telegram user")
     if not await require_subscription(update, context): return
     await update.message.reply_text("🎬 بوت تحميل الفيديوهات\n\nأرسل رابط فيديو من TikTok أو Instagram وسأعيده لك.")
 
@@ -38,7 +41,8 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def _broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.application.bot_data["broadcast_mode"] = False
     store = context.application.bot_data.get("user_store")
-    users = store.ids() if store else context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0})["users"]
+    try: users = store.ids() if store else context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0})["users"]
+    except Exception: logger.exception("Could not read broadcast users"); users = []
     sent = failed = 0
     for user_id in users:
         if user_id == update.effective_user.id: continue
@@ -50,7 +54,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if is_owner(update, context) and context.application.bot_data.get("broadcast_mode"):
         await _broadcast(update, context); return
     store = context.application.bot_data.get("user_store")
-    if store: store.upsert(update.effective_user)
+    if store:
+        try: store.upsert(update.effective_user)
+        except Exception: logger.exception("Could not save Telegram user")
     stats = context.application.bot_data.setdefault("stats", {"users": set(), "downloads": 0, "errors": 0})
     if not await require_subscription(update, context): return
     url = extract_url(update.message.text or "")
