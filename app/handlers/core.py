@@ -32,10 +32,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await require_owner(update, context):
         return
     await update.effective_message.reply_text(
-        "مرحبًا بك. أضف كل منتج مرة واحدة بصورة مرجعية والاسم الذي تختاره، "
-        "ثم أرسل صورة المنتج فقط كلما أردت معرفة اسمه.\n\n"
-        "للإضافة: أرسل /addpart ثم صورة المنتج، وبعدها الاسم فقط. "
-        "يمكنك وضع الاسم في تعليق الصورة لتختصر خطوة.\n"
+        "مرحبًا بك. أضف صورة مرجعية واحدة أو أكثر لكل منتج، ثم أرسل صورة البحث وحدها.\n\n"
+        "للإضافة: أرسل /addpart ثم صورة المنتج والاسم الذي تختاره. "
+        "لإضافة زاوية أخرى للمنتج نفسه، كرر /addpart واكتب الاسم نفسه تمامًا. "
+        "يمكنك وضع الاسم في تعليق كل صورة.\n"
         "للبحث: أرسل صورة المنتج فقط.\n"
         "لعرض الأسماء: /catalog — للإلغاء: /cancel.\n\n"
         "صور المنتجات المرجعية تحفظ في مخزن خاص. تُرسل الصور المرجعية وصورة البحث "
@@ -47,9 +47,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await require_owner(update, context):
         return
     await update.effective_message.reply_text(
-        "إضافة منتج: /addpart، ثم أرسل صورة مرجعية مع الاسم في تعليقها، "
-        "أو أرسل الصورة ثم اكتب الاسم في الرسالة التالية. اكتب الاسم فقط دون تفاصيل.\n"
-        "بعد الإضافة، أرسل صورة المنتج فقط ليعيد البوت الاسم المحفوظ.\n"
+        "إضافة صورة مرجعية: /addpart، ثم أرسل الصورة مع الاسم في تعليقها، "
+        "أو أرسل الصورة ثم اكتب الاسم فقط. لتسجيل زوايا متعددة لنفس القطعة، "
+        "كرر ذلك لكل صورة واستخدم الاسم نفسه تمامًا.\n"
+        "بعد التسجيل، أرسل صورة المنتج وحدها ليعيد البوت الاسم المحفوظ.\n"
         "/catalog لعرض الأسماء المسجلة — /cancel لإلغاء إضافة جارية."
     )
 
@@ -64,7 +65,8 @@ async def add_part_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     context.user_data["catalog_add"] = {"step": "image"}
     await update.effective_message.reply_text(
-        "أرسل صورة المنتج مع الاسم في تعليقها، أو أرسل الصورة أولًا ثم الاسم في الرسالة التالية."
+        "أرسل صورة هذا المنظور مع الاسم في تعليقها، أو أرسل الصورة ثم الاسم فقط. "
+        "للمنظور التالي للمنتج نفسه، كرر /addpart واستخدم الاسم نفسه."
     )
 
 
@@ -90,10 +92,13 @@ async def catalog_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not products:
         await update.effective_message.reply_text("لا توجد أسماء مسجلة بعد. استخدم /addpart.")
         return
-    names = [product["full_name"] for product in products[:60]]
-    if len(products) > 60:
-        names.append(f"… ويوجد {len(products) - 60} اسمًا آخر.")
-    await update.effective_message.reply_text("الأسماء المسجلة:\n" + "\n".join(f"• {name}" for name in names))
+    names = list(dict.fromkeys(product["full_name"] for product in products))
+    shown_names = names[:60]
+    if len(names) > 60:
+        shown_names.append(f"… ويوجد {len(names) - 60} اسمًا آخر.")
+    await update.effective_message.reply_text(
+        "الأسماء المسجلة:\n" + "\n".join(f"• {name}" for name in shown_names)
+    )
 
 
 async def _download_image(message, context) -> tuple[bytes, str]:

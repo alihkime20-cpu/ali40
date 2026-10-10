@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.services import car_parts
-from app.services.car_parts import format_match, match_product_image
+from app.services.car_parts import _aggregate_matches, format_match, match_product_image
 from app.services.catalog import CatalogError, CatalogStore
 
 
@@ -40,6 +40,35 @@ def test_ambiguous_match_lists_names_only():
     assert "مضخة ماء تويوتا كورولا الأصلية" in text
     assert "مضخة ماء بديلة" in text
     assert "رقم القطعة" not in text
+
+
+def test_multiple_reference_angles_with_same_name_are_one_product():
+    product = sample_product()
+    result = _aggregate_matches(
+        [
+            {"product": product, "confidence": "high"},
+            {
+                "product": sample_product(id="part-angle-2", image_path="angle-2.jpg"),
+                "confidence": "high",
+            },
+        ]
+    )
+    assert result["status"] == "matched"
+    assert format_match(result) == "مضخة ماء تويوتا كورولا الأصلية"
+
+
+def test_distinct_high_confidence_names_remain_ambiguous():
+    result = _aggregate_matches(
+        [
+            {"product": sample_product(), "confidence": "high"},
+            {
+                "product": sample_product(full_name="مضخة ماء بديلة"),
+                "confidence": "high",
+            },
+        ]
+    )
+    assert result["status"] == "ambiguous"
+    assert len(result["products"]) == 2
 
 
 @pytest.mark.asyncio
