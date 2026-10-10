@@ -6,8 +6,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     telegram_bot_token: str
     admin_user_id: int = 7112435274
-    required_channel: str = "@a11g9n"
-    required_channel_url: str = "https://t.me/a11g9n"
     supabase_url: str | None = None
     supabase_service_role_key: str | None = None
     openai_api_key: str | None = None

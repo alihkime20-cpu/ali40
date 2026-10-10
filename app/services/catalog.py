@@ -1,0 +1,121 @@
+import logging
+import uuid
+from pathlib import Path
+from typing import Any
+
+from supabase import Client, create_client
+
+logger = logging.getLogger(__name__)
+
+BUCKET_NAME = "car-part-catalog"
+MAX_CATALOG_IMAGE_BYTES = 8 * 1024 * 1024
+MIME_EXTENSIONS = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+}
+
+
+class CatalogError(Exception):
+    """Raised when the private product catalog cannot be accessed."""
+
+
+class CatalogStore:
+    def __init__(self, url: str, service_role_key: str):
+        self.client: Client = create_client(url, service_role_key)
+
+    def add_product(
+        self,
+        *,
+        full_name: str,
+        part_number: str,
+        details: str,
+        image_bytes: bytes,
+        mime_type: str,
+    ) -> dict[str, Any]:
+        if not full_name.strip():
+            raise CatalogError("يجب إدخال اسم المنتج.")
+        if len(image_bytes) > MAX_CATALOG_IMAGE_BYTES:
+            raise CatalogError("حجم الصورة يتجاوز الحد المسموح.")
+        extension = MIME_EXTENSIONS.get(mime_type)
+        if not extension:
+            raise CatalogError("صيغة الصورة غير مدعومة.")
+
+        product_id = str(uuid.uuid4())
+        storage_path = f"{product_id}.{extension}"
+        storage = self.client.storage.from_(BUCKET_NAME)
+        try:
+            storage.upload(
+                storage_path,
+                image_bytes,
+                {"content-type": mime_type, "upsert": "false"},
+            )
+            response = (
+                self.client.table("car_parts_catalog")
+                .insert(
+                    {
+                        "full_name": full_name.strip()[:300],
+                        "part_number": part_number.strip()[:120] or None,
+                        "details": details.strip()[:1200] or None,
+                        "image_path": storage_path,
+                        "image_mime_type": mime_type,
+                    }
+                )
+                .execute()
+            )
+            if not response.data:
+                raise CatalogError("لم يُحفظ سجل المنتج.")
+            return response.data[0]
+        except CatalogError:
+            try:
+                storage.remove([storage_path])
+            except Exception:
+                logger.warning("Could not clean up an unlinked catalog image")
+            raise
+        except Exception as exc:
+            try:
+                storage.remove([storage_path])
+            except Exception:
+                logger.warning("Could not clean up an unlinked catalog image")
+            raise CatalogError("تعذر حفظ المنتج في كتالوج Supabase.") from exc
+
+    def list_products(self, page_size: int = 100) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        offset = 0
+        try:
+            while True:
+                page = (
+                    self.client.table("car_parts_catalog")
+                    .select("id,full_name,part_number,details,image_path,image_mime_type,created_at")
+                    .order("created_at")
+                    .order("id")
+                    .range(offset, offset + page_size - 1)
+                    .execute()
+                    .data
+                    or []
+                )
+                rows.extend(page)
+                if len(page) < page_size:
+                    return rows
+                offset += page_size
+        except Exception as exc:
+            raise CatalogError("تعذر قراءة كتالوج المنتجات.") from exc
+
+    def load_images(self, products: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        storage = self.client.storage.from_(BUCKET_NAME)
+        loaded: list[dict[str, Any]] = []
+        for product in products:
+            try:
+                image_bytes = storage.download(product["image_path"])
+                if not image_bytes:
+                    continue
+                candidate = dict(product)
+                candidate["image_bytes"] = bytes(image_bytes)
+                loaded.append(candidate)
+            except Exception as exc:
+                logger.warning("Could not load a catalog image (%s)", type(exc).__name__)
+        return loaded
+
+    def catalog_count(self) -> int:
+        return len(self.list_products())

@@ -1,276 +1,267 @@
+import asyncio
 import logging
 import time
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import Update
 from telegram.ext import ContextTypes
 
-from app.handlers.subscription import require_subscription
-from app.services.car_parts import CarPartAnalysisError, analyze_car_part, format_analysis
+from app.services.car_parts import (
+    CarPartAnalysisError,
+    format_catalog_result,
+    match_catalog_image,
+)
+from app.services.catalog import CatalogError, CatalogStore, MIME_EXTENSIONS
 
 logger = logging.getLogger(__name__)
 
 
 def is_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    return bool(
-        update.effective_user
-        and update.effective_user.id
-        == context.application.bot_data["settings"].admin_user_id
-    )
-
-
-def admin_markup() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton("📊 الإحصائيات", callback_data="admin_stats"),
-                InlineKeyboardButton("🔄 تحديث", callback_data="admin_refresh"),
-            ],
-            [
-                InlineKeyboardButton("📢 القناة", callback_data="admin_channel"),
-                InlineKeyboardButton("📣 إذاعة", callback_data="admin_broadcast"),
-            ],
-            [InlineKeyboardButton("ℹ️ التعليمات", callback_data="admin_help")],
-        ]
-    )
-
-
-def stats_text(context: ContextTypes.DEFAULT_TYPE) -> str:
-    stats = context.application.bot_data.setdefault(
-        "stats", {"users": set(), "image_analyses": 0, "errors": 0}
-    )
-    store = context.application.bot_data.get("user_store")
-    try:
-        user_count = len(store.ids()) if store else len(stats["users"])
-    except Exception as exc:
-        logger.warning("Could not read users from Supabase (%s)", type(exc).__name__)
-        user_count = len(stats["users"])
-    return (
-        "📊 لوحة تحكم البوت\n\n"
-        f"👥 المستخدمون: {user_count}\n"
-        f"🖼 تحليلات الصور الناجحة: {stats['image_analyses']}\n"
-        f"⚠️ الأخطاء: {stats['errors']}"
-    )
-
-
-async def _track_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
-    if user:
-        stats = context.application.bot_data.setdefault(
-            "stats", {"users": set(), "image_analyses": 0, "errors": 0}
-        )
-        stats["users"].add(user.id)
-    store = context.application.bot_data.get("user_store")
-    if store and user:
-        try:
-            store.upsert(user)
-        except Exception as exc:
-            logger.warning("Could not save Telegram user (%s)", type(exc).__name__)
+    return bool(
+        user
+        and user.id == context.application.bot_data["settings"].admin_user_id
+    )
+
+
+async def require_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    if is_owner(update, context):
+        return True
+    message = update.effective_message
+    if message:
+        await message.reply_text("هذا بوت خاص، واستخدامه متاح للمالك فقط.")
+    return False
+
+
+def get_catalog_store(context: ContextTypes.DEFAULT_TYPE) -> CatalogStore | None:
+    return context.application.bot_data.get("catalog_store")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await _track_user(update, context)
-    if not await require_subscription(update, context):
+    if not await require_owner(update, context):
         return
     await update.effective_message.reply_text(
-        "مرحبًا بك في مساعد التعرّف على قطع غيار السيارات.\n\n"
-        "أرسل صورة واضحة للقطعة، ويمكنك إضافة معلومات السيارة في تعليق الصورة "
-        "مثل الشركة والموديل وسنة الصنع ورقم المحرك.\n\n"
-        "تُرسل الصورة إلى مزود الذكاء الاصطناعي المهيأ للبوت للتحليل، "
-        "ولا يحتفظ البوت بنسخة منها. النتيجة تقديرية؛ تحقّق من رقم القطعة "
-        "والتوافق قبل الشراء أو التركيب."
+        "مرحبًا بك في كتالوج قطع غيار السيارات الخاص بك.\n\n"
+        "لإضافة منتج إلى الكتالوج: أرسل /addpart، ثم صورته المرجعية، "
+        "وبعدها اكتب اسمه الكامل ورقم القطعة إن وجد. كرر ذلك لكل منتج.\n\n"
+        "للتعرّف على منتج مسجّل: أرسل صورته فقط، وسأطابقها مع الصور والأسماء "
+        "المحفوظة وأقرأ ما يظهر عليها من أرقام أو نصوص.\n\n"
+        "لعرض المنتجات المسجلة أرسل /catalog، ولإلغاء عملية الإضافة أرسل /cancel.\n\n"
+        "صور الكتالوج تحفظ في مخزن خاص على Supabase. تُرسل صورة المطابقة وصور "
+        "الكتالوج إلى OpenAI للتحليل، أما صورة الاستعلام فلا تُحفظ في الكتالوج."
     )
 
 
-async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not is_owner(update, context):
-        await update.effective_message.reply_text("هذا الأمر متاح للمدير فقط.")
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await require_owner(update, context):
         return
     await update.effective_message.reply_text(
-        stats_text(context), reply_markup=admin_markup()
+        "طريقة الاستخدام:\n"
+        "• أرسل صورة فقط لمطابقتها مع منتجاتك المحفوظة.\n"
+        "• لإضافة منتج: /addpart ثم أرسل الصورة المرجعية، ثم الاسم الكامل.\n"
+        "• يمكنك كتابة البيانات بهذا التنسيق: الاسم الكامل | رقم القطعة | التفاصيل.\n"
+        "• /catalog لعرض الكتالوج، و/cancel لإلغاء إضافة جارية.\n\n"
+        "لا يوجد اشتراك قناة. يقتصر الاستخدام على معرف المالك المضبوط في الإعدادات."
     )
 
 
-async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    if not is_owner(update, context):
-        await query.answer("غير مصرح لك.", show_alert=True)
+async def add_part_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await require_owner(update, context):
         return
-    await query.answer()
-    settings = context.application.bot_data["settings"]
-    if query.data in {"admin_stats", "admin_refresh"}:
-        await query.edit_message_text(stats_text(context), reply_markup=admin_markup())
-    elif query.data == "admin_channel":
-        await query.edit_message_text(
-            "📢 القناة الإلزامية\n\n"
-            f"{settings.required_channel_url}\n\n"
-            f"المالك مستثنى بالمعرف: {settings.admin_user_id}",
-            reply_markup=admin_markup(),
+    if not get_catalog_store(context):
+        await update.effective_message.reply_text(
+            "كتالوج الصور غير متصل بـ Supabase. يلزم ضبط SUPABASE_URL "
+            "وSUPABASE_SERVICE_ROLE_KEY في بيئة الاستضافة."
         )
-    elif query.data == "admin_broadcast":
-        context.application.bot_data["broadcast_mode"] = True
-        await query.edit_message_text(
-            "📣 وضع الإذاعة مفعل\n\n"
-            "أرسل الآن رسالة واحدة، وسيتم إرسالها إلى المستخدمين المسجلين في البوت.",
-            reply_markup=admin_markup(),
-        )
-    else:
-        await query.edit_message_text(
-            "أرسل صورة واضحة لقطعة السيارة، واكتب معلومات السيارة في تعليق الصورة "
-            "للمساعدة على التعرّف والتحقق من التوافق.",
-            reply_markup=admin_markup(),
-        )
+        return
+    context.user_data["catalog_add"] = {"step": "image"}
+    await update.effective_message.reply_text(
+        "أرسل الآن صورة مرجعية واحدة للمنتج (JPEG أو PNG أو WEBP)، "
+        "ثم سأطلب الاسم الكامل ورقم القطعة. أرسل /cancel للإلغاء."
+    )
 
 
-async def _broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    context.application.bot_data["broadcast_mode"] = False
-    store = context.application.bot_data.get("user_store")
+async def cancel_add_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await require_owner(update, context):
+        return
+    context.user_data.pop("catalog_add", None)
+    await update.effective_message.reply_text("تم إلغاء إضافة المنتج.")
+
+
+def _parse_product_details(text: str) -> tuple[str, str, str]:
+    fields = [field.strip() for field in text.split("|", maxsplit=2)]
+    full_name = fields[0][:300] if fields else ""
+    part_number = fields[1][:120] if len(fields) > 1 else ""
+    details = fields[2][:1200] if len(fields) > 2 else ""
+    return full_name, part_number, details
+
+
+async def catalog_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await require_owner(update, context):
+        return
+    store = get_catalog_store(context)
+    if not store:
+        await update.effective_message.reply_text("كتالوج Supabase غير مهيأ.")
+        return
     try:
-        users = (
-            store.ids()
-            if store
-            else context.application.bot_data.setdefault(
-                "stats", {"users": set(), "image_analyses": 0, "errors": 0}
-            )["users"]
+        products = await asyncio.to_thread(store.list_products)
+    except CatalogError:
+        await update.effective_message.reply_text("تعذر قراءة الكتالوج الآن.")
+        return
+    if not products:
+        await update.effective_message.reply_text(
+            "الكتالوج فارغ. أضف أول منتج بالأمر /addpart."
         )
-    except Exception as exc:
-        logger.warning("Could not read broadcast users (%s)", type(exc).__name__)
-        users = []
-    sent = failed = 0
-    for user_id in users:
-        if user_id == update.effective_user.id:
-            continue
-        try:
-            await update.effective_message.copy(chat_id=user_id)
-            sent += 1
-        except Exception:
-            failed += 1
-            logger.warning("Broadcast delivery failed")
-    await update.effective_message.reply_text(
-        f"تمت الإذاعة.\n\n✅ تم الإرسال: {sent}\n❌ فشل الإرسال: {failed}",
-        reply_markup=admin_markup(),
-    )
+        return
+    lines = [f"منتجات الكتالوج ({len(products)}):"]
+    for index, product in enumerate(products[:35], start=1):
+        number = f" — {product['part_number']}" if product.get("part_number") else ""
+        lines.append(f"{index}. {product['full_name']}{number}")
+    if len(products) > 35:
+        lines.append(f"… وهناك {len(products) - 35} منتجًا آخر.")
+    await update.effective_message.reply_text("\n".join(lines))
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if is_owner(update, context) and context.application.bot_data.get("broadcast_mode"):
-        await _broadcast(update, context)
+    if not await require_owner(update, context):
         return
-    await _track_user(update, context)
-    if not await require_subscription(update, context):
+    state = context.user_data.get("catalog_add")
+    if state and state.get("step") == "name":
+        full_name, part_number, details = _parse_product_details(
+            update.effective_message.text or ""
+        )
+        if not full_name:
+            await update.effective_message.reply_text(
+                "أرسل الاسم الكامل للمنتج، أو استخدم: الاسم | رقم القطعة | التفاصيل."
+            )
+            return
+        store = get_catalog_store(context)
+        pending_image = state.get("image_bytes")
+        mime_type = state.get("mime_type")
+        if not store or not pending_image or not mime_type:
+            context.user_data.pop("catalog_add", None)
+            await update.effective_message.reply_text(
+                "انتهت بيانات الصورة المؤقتة. أعد العملية بالأمر /addpart."
+            )
+            return
+        status = await update.effective_message.reply_text("أحفظ المنتج وصورته المرجعية...")
+        try:
+            product = await asyncio.to_thread(
+                store.add_product,
+                full_name=full_name,
+                part_number=part_number,
+                details=details,
+                image_bytes=pending_image,
+                mime_type=mime_type,
+            )
+            context.user_data.pop("catalog_add", None)
+            await status.edit_text(
+                f"تمت إضافة المنتج إلى الكتالوج.\n"
+                f"الاسم: {product['full_name']}\n"
+                f"رقم القطعة: {product.get('part_number') or 'غير مسجل'}\n\n"
+                "أرسل صورته فقط لاحقًا للمطابقة."
+            )
+        except CatalogError as exc:
+            logger.warning("Could not add catalog product: %s", str(exc))
+            await status.edit_text(
+                "تعذر حفظ المنتج. أرسل /cancel ثم أعد إضافة الصورة والبيانات."
+            )
         return
+
     await update.effective_message.reply_text(
-        "للتعرّف على قطعة غيار، أرسل صورة واضحة لها. "
-        "أضف الشركة والموديل وسنة الصنع أو رقم القطعة في تعليق الصورة."
+        "أرسل صورة منتج مسجل للمطابقة، أو أرسل /addpart لإضافة منتج مع اسمه الكامل."
     )
+
+
+async def _download_telegram_image(message, context) -> tuple[bytes, str]:
+    max_bytes = context.application.bot_data["settings"].max_image_size_bytes
+    media = message.photo[-1] if message.photo else message.document
+    if not media:
+        raise CatalogError("لا توجد صورة في الرسالة.")
+    mime_type = (
+        (message.document.mime_type if message.document else "image/jpeg") or ""
+    )
+    if mime_type not in MIME_EXTENSIONS:
+        raise CatalogError("الصيغة غير مدعومة. أرسل JPEG أو PNG أو WEBP.")
+    if media.file_size and media.file_size > max_bytes:
+        raise CatalogError("حجم الصورة يتجاوز الحد المضبوط.")
+    telegram_file = await context.bot.get_file(media.file_id)
+    if telegram_file.file_size and telegram_file.file_size > max_bytes:
+        raise CatalogError("حجم الصورة يتجاوز الحد المضبوط.")
+    image_bytes = bytes(await telegram_file.download_as_bytearray())
+    if not image_bytes or len(image_bytes) > max_bytes:
+        raise CatalogError("الصورة فارغة أو أكبر من الحد المضبوط.")
+    return image_bytes, mime_type
 
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await require_owner(update, context):
+        return
     message = update.effective_message
-    user = update.effective_user
-    if not message or not user:
-        return
+    state = context.user_data.get("catalog_add")
 
-    if is_owner(update, context) and context.application.bot_data.get("broadcast_mode"):
-        await _broadcast(update, context)
-        return
-
-    await _track_user(update, context)
-    stats = context.application.bot_data.setdefault(
-        "stats", {"users": set(), "image_analyses": 0, "errors": 0}
-    )
-    if not await require_subscription(update, context):
-        return
-
-    settings = context.application.bot_data["settings"]
-    if not settings.openai_api_key:
+    if state and state.get("step") == "name":
         await message.reply_text(
-            "ميزة التعرّف على القطع غير مهيأة بعد. يلزم ضبط OPENAI_API_KEY "
-            "في متغيرات بيئة الاستضافة."
+            "استلمت الصورة. أرسل الآن الاسم الكامل، ويمكنك إضافة رقم القطعة والتفاصيل "
+            "بهذا التنسيق: الاسم الكامل | رقم القطعة | التفاصيل."
         )
         return
 
-    media = message.photo[-1] if message.photo else message.document
-    if not media:
-        await message.reply_text("أرسل صورة بصيغة JPEG أو PNG أو WEBP.")
-        return
-    mime_type = (message.document.mime_type if message.document else "image/jpeg") or ""
-    supported_mime_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-    if mime_type not in supported_mime_types:
-        await message.reply_text("صيغة الصورة غير مدعومة. أرسل JPEG أو PNG أو WEBP.")
+    try:
+        image_bytes, mime_type = await _download_telegram_image(message, context)
+    except CatalogError as exc:
+        await message.reply_text(str(exc))
         return
 
-    max_bytes = settings.max_image_size_bytes
-    if media.file_size and media.file_size > max_bytes:
+    if state and state.get("step") == "image":
+        context.user_data["catalog_add"] = {
+            "step": "name",
+            "image_bytes": image_bytes,
+            "mime_type": mime_type,
+        }
         await message.reply_text(
-            f"حجم الصورة أكبر من الحد المسموح ({settings.max_image_size_mb} MB). "
-            "أرسل صورة أصغر أو أرسلها كصورة مضغوطة."
+            "وصلت الصورة المرجعية. أرسل الآن الاسم الكامل للمنتج، ويمكنك إضافة رقم القطعة "
+            "والتفاصيل بهذا التنسيق: الاسم الكامل | رقم القطعة | التفاصيل."
+        )
+        return
+
+    settings = context.application.bot_data["settings"]
+    store = get_catalog_store(context)
+    if not store:
+        await message.reply_text(
+            "كتالوج الصور غير متصل بـ Supabase؛ لا أستطيع المطابقة حتى تُضبط إعدادات الكتالوج."
+        )
+        return
+    if not settings.openai_api_key:
+        await message.reply_text(
+            "خدمة المطابقة غير مهيأة: يلزم ضبط OPENAI_API_KEY في الاستضافة."
         )
         return
 
     cooldowns = context.application.bot_data.setdefault("image_analysis_last_at", {})
     now = time.monotonic()
     cooldown = settings.image_analysis_cooldown_seconds
-    last_request = cooldowns.get(user.id, 0.0)
-    remaining = cooldown - (now - last_request)
+    remaining = cooldown - (now - cooldowns.get(update.effective_user.id, 0.0))
     if remaining > 0:
-        await message.reply_text(f"انتظر {int(remaining) + 1} ثانية قبل تحليل صورة أخرى.")
+        await message.reply_text(f"انتظر {int(remaining) + 1} ثانية قبل المطابقة التالية.")
         return
-    cooldowns[user.id] = now
-    if len(cooldowns) > 1000:
-        context.application.bot_data["image_analysis_last_at"] = {
-            user_id: seen_at
-            for user_id, seen_at in cooldowns.items()
-            if now - seen_at < cooldown
-        }
+    cooldowns[update.effective_user.id] = now
 
-    status = await message.reply_text("🔎 أفحص الصورة الآن...")
+    status = await message.reply_text("أفحص الصورة وأقارنها بكتالوجك...")
     try:
-        telegram_file = await context.bot.get_file(media.file_id)
-        if telegram_file.file_size and telegram_file.file_size > max_bytes:
-            await status.edit_text(
-                f"حجم الصورة أكبر من الحد المسموح ({settings.max_image_size_mb} MB)."
-            )
-            return
-        image_bytes = bytes(await telegram_file.download_as_bytearray())
-        if not image_bytes:
-            await status.edit_text("تعذر تنزيل الصورة من Telegram؛ أعد إرسالها من فضلك.")
-            return
-        if len(image_bytes) > max_bytes:
-            await status.edit_text(
-                f"حجم الصورة أكبر من الحد المسموح ({settings.max_image_size_mb} MB)."
-            )
-            return
-
-        result = await analyze_car_part(
+        result = await match_catalog_image(
             image_bytes,
+            query_mime_type=mime_type,
+            catalog_store=store,
             api_key=settings.openai_api_key,
             model=settings.car_part_vision_model,
-            caption=message.caption or "",
-            mime_type=mime_type,
         )
-        stats["image_analyses"] += 1
-        await status.edit_text(format_analysis(result))
+        await status.edit_text(format_catalog_result(result))
     except CarPartAnalysisError as exc:
-        stats["errors"] += 1
-        logger.warning("Car-part image analysis failed: %s", str(exc))
-        await status.edit_text("تعذر تحليل الصورة الآن. أعد المحاولة بصورة أوضح بعد قليل.")
+        logger.warning("Catalog image match failed: %s", str(exc))
+        await status.edit_text("تعذر إتمام المطابقة الآن. حاول مرة أخرى بعد قليل.")
     except Exception as exc:
-        stats["errors"] += 1
-        logger.warning("Car-part image request failed (%s)", type(exc).__name__)
-        await status.edit_text(
-            "تعذر استلام الصورة أو إرسال نتيجة التحليل. أعد المحاولة بعد قليل."
-        )
-
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await require_subscription(update, context):
-        return
-    await update.effective_message.reply_text(
-        "أرسل صورة واضحة لقطعة السيارة، ويمكنك إضافة معلومات السيارة في تعليقها "
-        "مثل الشركة والموديل وسنة الصنع ورقم المحرك.\n\n"
-        "الصورة تُرسل إلى مزود الذكاء الاصطناعي المهيأ للبوت للتحليل، "
-        "ولا يحتفظ البوت بنسخة منها. النتيجة أولية ولا تؤكد التوافق أو السلامة."
-    )
+        logger.warning("Catalog lookup failed (%s)", type(exc).__name__)
+        await status.edit_text("حدث خطأ في قراءة كتالوج الصور. حاول مرة أخرى لاحقًا.")
 
 
 async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE):
