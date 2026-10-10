@@ -4,19 +4,14 @@ from types import SimpleNamespace
 import pytest
 
 from app.services import car_parts
-from app.services.car_parts import (
-    format_catalog_result,
-    match_catalog_image,
-)
-from app.services.catalog import CatalogStore
+from app.services.car_parts import format_match, match_product_image
+from app.services.catalog import CatalogError, CatalogStore
 
 
-def make_product(**overrides):
+def sample_product(**overrides):
     product = {
         "id": "part-1",
-        "full_name": "مضخة ماء تويوتا كورولا أصلية",
-        "part_number": "16100-0T020",
-        "details": "محرك 1.6 لتر، موديل 2018",
+        "full_name": "مضخة ماء تويوتا كورولا الأصلية",
         "image_path": "part-1.jpg",
         "image_mime_type": "image/jpeg",
         "image_bytes": b"reference-image",
@@ -25,58 +20,37 @@ def make_product(**overrides):
     return product
 
 
-def test_format_exact_catalog_match_returns_saved_full_name_and_number():
-    text = format_catalog_result(
+def test_exact_match_replies_with_only_saved_name():
+    text = format_match({"status": "matched", "product": sample_product()})
+    assert text == "مضخة ماء تويوتا كورولا الأصلية"
+
+
+def test_uncertain_match_is_labeled_not_asserted():
+    text = format_match({"status": "possible", "product": sample_product()})
+    assert text == "الاسم الأقرب (غير مؤكد): مضخة ماء تويوتا كورولا الأصلية"
+
+
+def test_ambiguous_match_lists_names_only():
+    text = format_match(
         {
-            "status": "matched",
-            "catalog_count": 1,
-            "visible_text": "16100-0T020",
-            "selected": {"product": make_product(), "confidence": "high", "reason": "تطابق الملصق والشكل"},
-            "matches": [],
+            "status": "ambiguous",
+            "products": [sample_product(), sample_product(full_name="مضخة ماء بديلة")],
         }
     )
-    assert "مضخة ماء تويوتا كورولا أصلية" in text
-    assert "16100-0T020" in text
-    assert "تطابق الملصق والشكل" in text
-
-
-def test_empty_catalog_instructs_owner_to_add_reference():
-    text = format_catalog_result(
-        {"status": "empty_catalog", "catalog_count": 0, "visible_text": "", "matches": []}
-    )
-    assert "/addpart" in text
-
-
-def test_uncertain_catalog_match_is_not_presented_as_exact():
-    text = format_catalog_result(
-        {
-            "status": "possible",
-            "catalog_count": 1,
-            "visible_text": "AB-123",
-            "selected": {"product": make_product(), "confidence": "medium", "reason": "تشابه عام"},
-            "matches": [],
-        }
-    )
-    assert "المطابقة غير مؤكدة" in text
-    assert "مضخة ماء تويوتا كورولا أصلية" in text
-    assert "AB-123" in text
+    assert "مضخة ماء تويوتا كورولا الأصلية" in text
+    assert "مضخة ماء بديلة" in text
+    assert "رقم القطعة" not in text
 
 
 @pytest.mark.asyncio
-async def test_match_compares_query_to_catalog_reference_images(monkeypatch):
+async def test_match_compares_query_photo_with_saved_reference(monkeypatch):
     captured = {}
-    answer = {
-        "match_index": 0,
-        "same_product": True,
-        "confidence": "high",
-        "visible_text": "16100-0T020",
-        "reason": "تطابق رقم القطعة الظاهر",
-    }
+    answer = {"match_index": 0, "same_product": True, "confidence": "high"}
 
     class FakeResponses:
         async def create(self, **kwargs):
             captured.update(kwargs)
-            return SimpleNamespace(output_text=json.dumps(answer, ensure_ascii=False))
+            return SimpleNamespace(output_text=json.dumps(answer))
 
     class FakeClient:
         def __init__(self, **kwargs):
@@ -88,74 +62,51 @@ async def test_match_compares_query_to_catalog_reference_images(monkeypatch):
 
     class FakeStore:
         def list_products(self):
-            return [make_product()]
+            return [sample_product()]
 
         def load_images(self, products):
             return products
 
     monkeypatch.setattr(car_parts, "AsyncOpenAI", FakeClient)
-    result = await match_catalog_image(
+    result = await match_product_image(
         b"query-image",
         query_mime_type="image/png",
         catalog_store=FakeStore(),
         api_key="test-key",
     )
-
     assert result["status"] == "matched"
-    assert result["selected"]["product"]["full_name"] == "مضخة ماء تويوتا كورولا أصلية"
+    assert format_match(result) == "مضخة ماء تويوتا كورولا الأصلية"
     content = captured["input"][0]["content"]
-    image_inputs = [item for item in content if item["type"] == "input_image"]
-    assert len(image_inputs) == 2
-    assert image_inputs[0]["image_url"].startswith("data:image/png;base64,")
-    assert "مضخة ماء تويوتا كورولا أصلية" in " ".join(
+    images = [item for item in content if item["type"] == "input_image"]
+    assert len(images) == 2
+    assert images[0]["image_url"].startswith("data:image/png;base64,")
+    assert "الاسم المحفوظ هو «مضخة ماء تويوتا كورولا الأصلية»" in " ".join(
         item.get("text", "") for item in content
     )
     assert captured["closed"] is True
 
 
 @pytest.mark.asyncio
-async def test_empty_catalog_still_reads_visible_product_name(monkeypatch):
-    label = {
-        "product_name": "فلتر زيت تويوتا",
-        "part_number": "90915-YZZE1",
-        "visible_text": "TOYOTA 90915-YZZE1",
-    }
-
-    class FakeResponses:
-        async def create(self, **kwargs):
-            return SimpleNamespace(output_text=json.dumps(label, ensure_ascii=False))
-
-    class FakeClient:
-        def __init__(self, **kwargs):
-            self.responses = FakeResponses()
-
-        async def close(self):
-            pass
-
+async def test_empty_catalog_requests_initial_photo_name_pair():
     class FakeStore:
         def list_products(self):
             return []
 
-    monkeypatch.setattr(car_parts, "AsyncOpenAI", FakeClient)
-    result = await match_catalog_image(
+    result = await match_product_image(
         b"query-image",
         query_mime_type="image/jpeg",
         catalog_store=FakeStore(),
         api_key="test-key",
     )
-    assert result["status"] == "empty_catalog"
-    assert result["product_name"] == "فلتر زيت تويوتا"
-    assert result["part_number"] == "90915-YZZE1"
+    assert format_match(result).startswith("لم تُضف منتجات بعد")
 
 
-def test_add_product_uploads_private_image_and_saves_metadata(monkeypatch):
+def test_catalog_store_saves_image_and_name_only(monkeypatch):
     captured = {}
 
     class FakeStorage:
         def upload(self, path, payload, options):
-            captured["path"] = path
-            captured["payload"] = payload
-            captured["options"] = options
+            captured.update(path=path, payload=payload, options=options)
 
         def remove(self, paths):
             captured["removed"] = paths
@@ -177,14 +128,20 @@ def test_add_product_uploads_private_image_and_saves_metadata(monkeypatch):
     monkeypatch.setattr("app.services.catalog.create_client", lambda *_args: FakeClient())
     store = CatalogStore("https://example.supabase.co", "test-key")
     saved = store.add_product(
-        full_name="مضخة ماء أصلية",
-        part_number="OEM-555",
-        details="كورولا 2018",
-        image_bytes=b"ref",
+        full_name="فلتر هواء أصلي",
+        image_bytes=b"reference-image",
         mime_type="image/png",
     )
     assert saved["id"] == "id-123"
-    assert captured["payload"] == b"ref"
-    assert captured["options"]["content-type"] == "image/png"
-    assert captured["row"]["full_name"] == "مضخة ماء أصلية"
-    assert captured["row"]["part_number"] == "OEM-555"
+    assert captured["row"] == {
+        "full_name": "فلتر هواء أصلي",
+        "image_path": captured["path"],
+        "image_mime_type": "image/png",
+    }
+
+
+def test_catalog_store_rejects_empty_name():
+    store = CatalogStore.__new__(CatalogStore)
+    with pytest.raises(CatalogError):
+        # CatalogStore validates the name before making a storage call.
+        store.add_product(full_name="", image_bytes=b"image", mime_type="image/jpeg")
