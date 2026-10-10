@@ -36,21 +36,19 @@ def main():
         except Exception as exc:
             logger.warning("Supabase catalog unavailable (%s)", type(exc).__name__)
     else:
-        logger.warning(
-            "Supabase credentials are not configured; catalog add/matching is unavailable"
-        )
+        logger.warning("Supabase environment is missing; product name catalog is unavailable")
     app.bot_data["catalog_store"] = catalog_store
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("addpart", add_part_command))
-    app.add_handler(CommandHandler("cancel", cancel_add_command))
     app.add_handler(CommandHandler("catalog", catalog_command))
+    app.add_handler(CommandHandler("cancel", cancel_add_command))
     app.add_handler(MessageHandler(filters.PHOTO | filters.Document.IMAGE, handle_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(on_error)
 
-    logger.info("Private car-parts catalog bot is starting in polling mode")
+    logger.info("Private image-and-name car-part catalog bot is starting")
     app.run_polling(allowed_updates=["message"])
 
 
