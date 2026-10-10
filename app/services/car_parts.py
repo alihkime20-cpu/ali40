@@ -30,6 +30,34 @@ MATCH_INSTRUCTIONS = """أنت أداة تقارن صورة استعلام وا�
 إذا كانت الصورة غير واضحة أو لا يمكن تمييز المنتج عن منتجات مشابهة، أعد -1 أو confidence=low."""
 
 
+def _unique_by_saved_name(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    unique: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in items:
+        product = item["product"]
+        key = " ".join(product["full_name"].split()).casefold()
+        if key and key not in seen:
+            seen.add(key)
+            unique.append(item)
+    return unique
+
+
+def _aggregate_matches(matches: list[dict[str, Any]]) -> dict[str, Any]:
+    high = _unique_by_saved_name(
+        [item for item in matches if item["confidence"] == "high"]
+    )
+    if len(high) == 1:
+        return {"status": "matched", "product": high[0]["product"]}
+    if len(high) > 1:
+        return {"status": "ambiguous", "products": [item["product"] for item in high[:3]]}
+    unique_matches = _unique_by_saved_name(matches)
+    if len(unique_matches) == 1:
+        return {"status": "possible", "product": unique_matches[0]["product"]}
+    if len(unique_matches) > 1:
+        return {"status": "ambiguous", "products": [item["product"] for item in unique_matches[:3]]}
+    return {"status": "not_found", "products": []}
+
+
 def _data_url(image_bytes: bytes, mime_type: str) -> str:
     encoded = base64.b64encode(image_bytes).decode("ascii")
     return f"data:{mime_type};base64,{encoded}"
@@ -122,16 +150,7 @@ async def match_product_image(
     finally:
         await client.close()
 
-    high = [item for item in matches if item["confidence"] == "high"]
-    if len(high) == 1:
-        return {"status": "matched", "product": high[0]["product"]}
-    if len(high) > 1:
-        return {"status": "ambiguous", "products": [item["product"] for item in high[:3]]}
-    if len(matches) == 1:
-        return {"status": "possible", "product": matches[0]["product"]}
-    if len(matches) > 1:
-        return {"status": "ambiguous", "products": [item["product"] for item in matches[:3]]}
-    return {"status": "not_found", "products": []}
+    return _aggregate_matches(matches)
 
 
 def format_match(result: dict[str, Any]) -> str:
